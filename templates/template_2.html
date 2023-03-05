@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="static\CSS\style.css">
+
+  </head>
+  <body>
+
+    <div class="container">
+        <div class="row" id="row" draggable="true">
+
+            <div class="col-lg-8  offset-lg-2" draggable="true">
+                <h3 class="mt-5">Live Feed</h3>
+                <canvas id="imgCanvas" hidden></canvas>
+                <img id="feed"src="{{imgpath}}" draggable="true">
+                <canvas id="canvas" draggable="true"></canvas>
+                <canvas id="canvas_draw" >draggable="true"</canvas>
+            </div>
+            <form id="imgCap" method="post" enctype="multipart/form-data" draggable="true">
+              <input type="hidden" name="imageCap" id="imageCap" value="">
+              <button type="submit" id="button" name="button1" onclick="get_img()">capture image</button>
+            </form>
+
+
+
+        </div>
+        <div class="row2" id="row2" draggable="true">
+          <h3 class="res">Results</h3>
+
+
+        <div class="textBox_container" draggable="true">
+          <p><b>image Quality:</b><input type="text" name="" id="imgQ" value="" style="background-color:green;" disabled></p>
+          <p><b>Abdominal planes:</b><input type="text" name="" id="abdom" value="97%" disabled></p>
+          <p><b>Head detected:</b><input type="text" name="" value="17%" id="headD" disabled></p>
+          <p><b>something detected:</b><input type="text" name="" value="58%" id="SD"disabled></p>
+          <p><b>something something:</b><input type="text" name="" value="0%" id="SS" disabled></p>
+
+
+        </div>
+        </div>
+
+    </div>
+</body>
+</html>

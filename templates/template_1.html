@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="static/CSS/style.css">
+    <script src="static/javascript/jquery-3.5.1.js"></script>
+    <script type="text/javascript">
+    const bgImg = new Image(); // Create new img element
+    const aImg = new Image();
+    const planesImg = new Image();
+    bgImg.src = "static/background_placeholder.png";
+    aImg.src = "static/background_placeholder_analysis.png"
+    planesImg.src = "static/standardplanes.png";
+    </script>
+    <script
+    src="static/javascript/template_1.js">
+  </script>
+  </head>
+  <body>
+    <div class="nav-bar">
+      <a class="home" href="/">Home</a>
+    </div>
+  <div class="container">
+      <div class="row" id="row">
+        <div class="col1">
+          <div class="col-lg-8  offset-lg-2">
+              <canvas id="imgCanvas" height="480px" width="640px"></canvas>
+              <img id="feed"src="{{ url_for('video_feed') }}" hidden>
+              <img id ="mask"src="static\image-from-rawpixel-id-2343269-png.png" hidden>
+              <!--<img src="" id="canImg">-->
+              <!--<canvas id="canvas"></canvas>-->
+              <!--<canvas id="canvas_draw" ></canvas>-->
+          </div>
+        </div>
+        <div class="col2">
+          <form id="imgCap" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="imageCap" id="imageCap" value="">
+            <button type="submit" id="button" name="button1" onclick="get_img()">capture image</button>
+          </form>
+          <canvas id="Canvasplanes" width="300" height="300"></canvas>
+        </div>
+      </div>
+      <div class="row" id="row2">
+        <div class="col1">
+          <canvas id="canvas_draw" height="480px" width="640px"></canvas>
+          <!--<button type="button" id="button2" name="button2" onclick="applyMask()" >Apply Mask</button>-->
+        </div>
+
+        <div class="col2">
+          <div class="textBox_container">
+            <h3 class="res">Results:</h3>
+            <p><b>Image Quality:</b><input type="text" name="" id="imgQ" value="" style="background-color:#F75151;" disabled></p>
+            <p><b>Detection label</b><input type="text" name="" value="" id="SS" disabled></p>
+            <p><b>Abdominal planes:</b><input type="text" name="" id="abdom" value="97%" disabled></p>
+            <p><b>Head detected:</b><input type="text" name="" value="17%" id="headD" disabled></p>
+            <p><b>Confidence:</b><input type="text" name="" value="58%" id="SD"disabled></p>
+          </div>
+          <div class="textBox_container">
+            <h3 class="res">Describing text:</h3>
+            <p>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+              sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+              Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+              reprehenderit in voluptate velit esse cillum dolore eu fugiat
+              nulla pariatur. Excepteur sint occaecat cupidatat non proident,
+              sunt in culpa qui officia deserunt mollit anim id est laborum.
+            </p>
+          </div>
+        </div>
+      </div>
+
+  </div>
+
+</body>
+<script type="text/javascript">
+var video = document.createElement('video');
+video.setAttribute('id','video')
+video.setAttribute('autoplay', '');
+video.setAttribute('muted', '');
+video.setAttribute('playsinline', '');
+document.body.appendChild(video);
+var constraints = {
+audio: false,
+video: {
+  width: { ideal: 1280 },
+  height: { ideal: 720 },
+  facingMode: 'environments'
+}
+};
+navigator.mediaDevices.getUserMedia(constraints)
+.then(function(stream) {
+  video.srcObject = stream;
+})
+.catch(function(error) {
+  console.error('getUserMedia() error: ', error);
+});
+</script>
+
+</html>

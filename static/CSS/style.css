@@ -1,0 +1,116 @@
+body{
+  background-color:#252729;
+  margin:0;
+}
+#Canvasplanes{
+  margin-left:40;
+}
+#planeImg{
+  float:right;
+  margin-right: 40px;
+
+}
+button{
+width:150px;
+height:45px;
+background-color:#022a52;
+font-size:20px;
+padding: 4px;
+color:gray;
+vertical-align: top;
+outline: gray 3px solid;
+float:left;
+}
+#homeButton{
+  position:absolute;
+  top:3px;
+  left:3px;
+
+}
+#button2{
+  float:right;
+}
+.container{
+  width:100%;
+}
+.row{
+  float:left;
+  width:50%;
+}
+.col1{
+  height:50%;
+  margin-top: 50px;
+  margin-left: 50px;
+
+}
+.col2{
+  height:50%;
+  margin-top: 50px;
+  margin-left: 50px;
+
+}
+.row2{
+  width:50%;
+
+  float:right;
+}
+.textBox_container{
+  width:312.5px;
+  height:auto;
+  float:left;
+  outline: gray 3px solid;
+  margin: 5px;
+
+}
+#Canvasplanes{
+  margin-left:190px;
+}
+.nav-bar{
+  overflow: hidden;
+  background-color: #022a52;
+
+}
+.nav-bar a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+.nav-bar a.home {
+  background-color: #022a52;
+  border: solid;
+  color: gray;
+}
+p{
+  font-size: 16px;
+  margin-top: 10px;
+  padding: 2px;
+  margin-left: 5px;
+  color:gray;
+}
+h3{
+  margin-left: 5px;
+  color:gray;
+
+}
+input{
+  width: 80px;
+  float:right;
+  margin-right: 20px;
+  font-size: 16px;
+  text-align: right;
+  color:black;
+  outline: gray 3px solid;
+
+}
+
+canvas{
+  outline: gray 3px solid;
+
+}
+img{
+
+
+}
