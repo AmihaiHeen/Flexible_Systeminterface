@@ -22,7 +22,7 @@ This is tested on a template using a canvas and WebSocket that listens for an im
 ### Continuously capture and analyze images in the background
 There was a wish for the system to be able to capture images in the background while still capturing the images on client demand. The advantage of doing this is that the models can constantly analyze the stream of images and catch unnoticed anomalies and planes while the clinician is scanning the patient.   
 For the solution of capturing the images on the click of a button, the stream of images are captured and send by a WebSocket back to the backend in a specified frequency. Here the images are saved to specific folder.
-In the image freeze solution there are no image stream to the frontend and the images has to be captured in the backend as a separate process. This is done in a seperate python class extended as a thread, here an administator has predefined the frequency of which the images are captured and saved. The images are saved and put into a que that can then be read and processed. A simple simulation of a processing of an image has been implemented running as a thread that reads from the que with a 1 second delay between each value fetched. This function calculates the mean of the image np.array and prints "True" if the mean is above 115 and "False" if it is below that. Once the clinician is done and clicks on the home button, the threads looking at for frozen images and the thread filling the buffer/que are then stopped. The "analysis" of the images put into the que continuous to analyze untill the que is empty. 
+In the image freeze solution there are no image stream to the frontend and the images has to be captured in the backend as a separate process. This is done in a seperate python class extended as a thread, here an administator has predefined the frequency of which the images are captured and saved. The images are saved and put into a que that can then be read and processed. A simple simulation of a processing of an image has been implemented running as a thread that reads from the que with a 1 second delay between each value fetched. This function calculates the mean of the image np.array and prints "True" if the mean is above 115 and "False" if it is below that. Once the clinician is done and clicks on the home button, the threads looking at for frozen images and the thread filling the buffer/que are then stopped. The "analysis" of the images put into the que continuous to analyze untill the que is empty.
 
 ### UI: template_1  v.1
 
@@ -50,6 +50,6 @@ The reasoning of making the frozen image template is that it is important to mak
 - Image extraction
 
 #references
-- https://www.geeksforgeeks.org/python-classes-and-objects/
-- https://docs.python.org/3/library/threading.html
-- https://docs.python.org/3/library/queue.html#queue.Empty
+- https://www.geeksforgeeks.org/python-classes-and-objects/ 20/03/2023
+- https://docs.python.org/3/library/threading.html 20/03/2023
+- https://docs.python.org/3/library/queue.html#queue.Empty 20/03/2023
