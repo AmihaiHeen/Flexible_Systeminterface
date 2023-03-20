@@ -1,41 +1,82 @@
+var socket = io.connect(window.location.protocol + '//' + document.domain + ':' + location.port);
 
-    $(document).on('submit','#imgCap',function(e)
-                   {
-      console.log('hello');
-      e.preventDefault();
-      $.ajax({
-        type:'POST',
-        url:'/template_1',
-        data:{
-          imageCap:$("#imageCap").val()
-        },
-        success:function()
-        {
-          console.log('success');
-        }
-      })
-    });
 window.onload = function(){
-  var img = document.getElementById('feed');
+  //var img = document.getElementById('feed');
   var canvas = document.getElementById('canvas');
   var canvas_processed = document.getElementById('canvas_draw');
   var imageCan = document.getElementById('imgCanvas')
   var ctx_square = canvas_processed.getContext('2d');
   var planesCan = document.getElementById('Canvasplanes');
   var ctx_planes = planesCan.getContext('2d');
-  img.height = img.naturalHeight;
-  img.width = img.naturalWidth;
+  var resbox = document.getElementById('res_box');
+  var descbox = document.getElementById('desc_box');
+  var socket = io.connect(window.location.protocol + '//' + document.domain + ':' + location.port);
+  socket.on('connect', function () {
+  console.log("Connected...!", socket.connected)
+  console.log(location.port)
+
+  });
+
+  console.log(feed.src);
+  imageCan.height = feed.naturalHeight;
+  imageCan.width = feed.naturalWidth;
+  canvas_processed.height = feed.naturalHeight;
+  canvas_processed.width = feed.naturalWidth;
+  console.log(imageCan.width);
+  resbox.style.width = imageCan.width/2+"px";
+  descbox.style.width = imageCan.width/2+"px";
   var bgctx = imageCan.getContext('2d');
   //console.log(imageCan.width)
   bgctx.drawImage(bgImg,0,0,imageCan.width,imageCan.height);
   ctx_square.drawImage(aImg,0,0,canvas_processed.width, canvas_processed.height);
   ctx_planes.drawImage(planesImg,0,0,planesCan.width,planesCan.height);
+  var checkbox = document.getElementById('expert');
+  checkbox.addEventListener('change',function(){
+    var res = document.getElementById("res_box");
+    var desc = document.getElementById("desc_box");
+    var exp = document.getElementById("expert_box");
+    if(checkbox.checked){
+      res.style.display = "none";
+      desc.style.display = "none";
+      exp.style.display = "block";
+    }
+    else{
+      res.style.display = "block";
+      desc.style.display = "block";
+      exp.style.display = "none";
+
+    }
+  })
+  var socketCan = document.getElementById('socketCanvas');
+  var context = socketCan.getContext('2d')
+  console.log(FPS)
+  setInterval(() => {
+  socketCan.width = feed.naturalWidth;
+  socketCan.height = feed.naturalHeight;
+  context.drawImage(feed, 0, 0, socketCan.width, socketCan.height);
+  var data = socketCan.toDataURL('image/jpeg', 0.5);
+  context.clearRect(0, 0, socketCan.width, socketCan.height);
+  socket.emit('buffer_image', data);
+}, 1000 / FPS);
 
 }
+socket.on('captured_image', function(img){
+  var imageCan = document.getElementById('imgCanvas');
+  var imgctx = imageCan.getContext('2d');
+  var canImg = new Image();
+  canImg.src = img.value;
+  imageCan.width = canImg.naturalWidth;
+  imageCan.height = canImg.naturalHeight;
+  imgctx.drawImage(img,0,0,imageCan.width, imageCan.height);
+
+})
+
+
+
 
 function get_img(){
-  var img = document.getElementById('feed');
-  var img2 = document.getElementById('mask')
+  //var img = document.getElementById('feed');
+  var img2 = document.getElementById('mask');
 
 //  var canimg = document.getElementById('canImg')
   var imageCan = document.getElementById('imgCanvas')
@@ -44,28 +85,36 @@ function get_img(){
   //var ctx = canvas.getContext('2d');
   var ctx_square = canvas_processed.getContext('2d');
   var imgctx = imageCan.getContext('2d')
-  imageCan.width = img.width;
-  imageCan.height = img.height;
+  imageCan.width = feed.naturalWidth;
+  imageCan.height = feed.naturalHeight;
   //canvas.width = img.width/2;
   //canvas.height = img.height/2;
-  canvas_processed.width = img.width;
-  canvas_processed.height = img.height;
-  imgctx.drawImage(img,0,0,img.width, img.height);
+  canvas_processed.width = feed.width;
+  canvas_processed.height = feed.height;
+  imgctx.drawImage(feed,0,0,feed.width, feed.height);
   //ctx.drawImage(img,0,0,canvas.width, canvas.height);
-  ctx_square.drawImage(img,0,0,canvas_processed.width, canvas_processed.height);
+  ctx_square.drawImage(feed,0,0,canvas_processed.width, canvas_processed.height);
   ctx_square.globalAlpha = 0.3;
 
   ctx_square.drawImage(img2,0,0,canvas_processed.width, canvas_processed.height);
   //draw_square(canvas_processed,ctx_square);
   random_percantage();
-  document.getElementById("imageCap").value = imageCan.toDataURL('image/jpeg', 1.0);
+  imgData = imageCan.toDataURL('image/jpeg', 1.0);
+  socket.emit('clientImage', imgData);
 
 }
 function capture_video(){
+  var img = document.getElementById('mask');
   var canvas = document.getElementById('imgCanvas');
   var video = document.getElementById('video');
   var ctx = canvas.getContext('2d');
+  var canvas_processed = document.getElementById('canvas_draw')
+  var ctx_square = canvas_processed.getContext('2d');
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  ctx_square.drawImage(video,0,0,canvas_processed.width, canvas_processed.height);
+  //ctx_square.globalAlpha = 0.3;
+
+  ctx_square.drawImage(img,0,0,canvas_processed.width, canvas_processed.height);
 }
 function random_percantage(){
   var colors = ['#F75151','#a0e77d','yellow'];
@@ -139,4 +188,27 @@ function draw_square(canvas,ctx){
   ctx.lineWidth = 5;
   ctx.stroke();
 
+}
+function show_hide(b) {
+  if(b==0){
+    var x = document.getElementById("res_div");
+    var y = document.getElementById("res_btn");
+    var z = "results"
+
+
+  }
+  else{
+    var x = document.getElementById("desc_div");
+    var y = document.getElementById("desc_btn");
+    var z = "description";
+
+  }
+  if (x.style.display === "none") {
+    x.style.display = "block";
+    y.innerHTML =     'Hide '+z+' <i class="fa-solid fa-minus"></i>'
+
+  } else {
+    x.style.display = "none";
+    y.innerHTML = "Show "+z+" <i class='fa-solid fa-plus'></i>"
+  }
 }

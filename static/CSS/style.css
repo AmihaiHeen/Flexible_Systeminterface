@@ -1,15 +1,10 @@
 body{
   background-color:#252729;
   margin:0;
+  overflow-x: hidden;
 }
-#Canvasplanes{
-  margin-left:40;
-}
-#planeImg{
-  float:right;
-  margin-right: 40px;
 
-}
+
 button{
 width:150px;
 height:45px;
@@ -27,6 +22,9 @@ float:left;
   left:3px;
 
 }
+#button{
+
+}
 #button2{
   float:right;
 }
@@ -38,13 +36,17 @@ float:left;
   width:50%;
 }
 .col1{
+  float: left;
   height:50%;
+  width:100%;
   margin-top: 50px;
   margin-left: 50px;
 
 }
 .col2{
+  float: left;
   height:50%;
+  width:100%;
   margin-top: 50px;
   margin-left: 50px;
 
@@ -54,16 +56,39 @@ float:left;
 
   float:right;
 }
-.textBox_container{
-  width:312.5px;
-  height:auto;
+.anomaly{
+  width:40%;
   float:left;
+  margin-right:3px;
+  display:none;
+}
+.textBox_container {
+  width: 320px;
+  float:left;
+  margin-right:3px;
+  display:block;
+}
+#res_btn, #desc_btn{
+  width:100%
+}
+.result_div, .describtion_div{
+  margin-top: 3rem;
   outline: gray 3px solid;
-  margin: 5px;
-
+  height:250px;
+  width:100%;
+  display:block;
+  overflow-y:scroll;
+}
+i{
+  align:center;
+  float:right;
 }
 #Canvasplanes{
-  margin-left:190px;
+  float:right;
+  margin-right: 24.26%;
+}
+#imgCanvas{
+
 }
 .nav-bar{
   overflow: hidden;
@@ -85,8 +110,7 @@ float:left;
 }
 p{
   font-size: 16px;
-  margin-top: 10px;
-  padding: 2px;
+  margin-top: 15px;
   margin-left: 5px;
   color:gray;
 }
@@ -95,10 +119,14 @@ h3{
   color:gray;
 
 }
-input{
+.expert{
+  float: left;
+  margin-left: 40px;
+}
+.result_div input, .anomaly input{
   width: 80px;
   float:right;
-  margin-right: 20px;
+  margin-right: 10px;
   font-size: 16px;
   text-align: right;
   color:black;
