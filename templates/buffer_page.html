@@ -1,0 +1,35 @@
+<html>
+<link rel="stylesheet" href="static/CSS/style.css">
+
+<head>
+</head>
+
+<body>
+<div id="imgdiv" class="container">
+
+
+<br>
+<br>
+
+</div>
+</body>
+<script type="text/javascript">
+
+  bufferImgs = {{bufferlist|tojson}}
+  for(i=0; i < bufferImgs.length; i++){
+    var para = document.createElement('p')
+    var textnode = document.createTextNode(bufferImgs[i]);
+    var  link = document.createElement('a');
+    link.setAttribute('href','https://www.google.com');
+    var elem = document.createElement("img");
+    elem.setAttribute("src", bufferImgs[i]);
+    elem.setAttribute("height", "100");
+    elem.setAttribute("width", "100");
+    para.appendChild(textnode)
+    link.appendChild(elem)
+    document.getElementById('imgdiv').appendChild(link)
+  }
+
+</script>
+
+</html>

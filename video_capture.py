@@ -18,7 +18,7 @@ capture_mode = 0
 def capture_Frames():
     '''
     This function capture an image stream from the specified camera, encode
-    the images to jpg files, and converts them to bytes, then return them to
+    the images to jpg files, and converts them to bytes, then yield them to
     a format able to be read by the browser
 
 
@@ -70,14 +70,14 @@ def freeze_image_detection(imgpath): #takes argument that specifies the start of
 
 #first iteration of background capture of images
 def background_capture(fps, bufferPath): #takes argument of frequency and path to directory of bufferimages
-'''
-This function capture an image stream from the specified camera at a specified frequency
-and saves them to a specific directory.
+    '''
+    This function capture an image stream from the specified camera at a specified frequency
+    and saves them to a specific directory.
 
 
-input: frequency, directory path
-output: image
-'''
+    input: frequency, directory path
+    output: image
+    '''
     cap = cv2.VideoCapture(capture_mode) #captures images from specified camera
     count = 1 #counter for image name
     success, frame = cap.read() #capture the first frame
@@ -92,39 +92,40 @@ output: image
             #path = vc.freeze_image_detection(imgpath)
 #still_frozen checks if image is still frozen since last frozen image captured
 def still_frozen(prevdiff, currdiff): #takes differences as argument
-'''
-This function checks if image is still frozen in the image stream.
+    '''
+    This function checks if image is still frozen in the image stream.
 
 
-input: previous difference, current difference
-output: boolean (True or False)
-'''
+    input: previous difference, current difference
+    output: boolean (True or False)
+    '''
     if (np.sum(np.abs(prevdiff-currdiff)==0)): #if their difference is equal to 0 the image is still frozen
         return True #returns True
     else: #if the image is frozen no more
         return False #return false and a new image can be captured
 
 #Function for "processing" the image
-def process_image(frame):#takes a frame as an argument
-'''
-This function calculates the mean of a frames pixelvalues and return true or
-false depending on the mean
+def process_image(frame,path):#takes a frame as an argument
+    '''
+    This function calculates the mean of a frames pixelvalues and return true or
+    false depending on the mean
 
 
-input: image frame
-output: boolean (True or False)
-'''
+    input: image frame
+    output: boolean (True or False)
+    '''
     mean = int(frame.mean()) #calculate the mean of the image pixel values
     print("consumed frame") #prints
     print("The result is:")
-
     if mean > 115: #checks if the mean is above 115
-        return True
+        return True, mean, path
+        cv2.imwrite(path,frame)
+
     else: #if the mean is below 115
-        return False
+        return False, mean, path
 
 #python class extending threading.Thread() class
-class frozenThread(threading.Thread):
+class freezeDetection(threading.Thread):
     #initialization of variables
     '''
     This class is extending threading.Thread and works as a background process.
@@ -180,22 +181,22 @@ class frozenThread(threading.Thread):
 #python class extending threading.Thread() class
 #Captures images in the background at a specified frequency, saves the images and puts them into a que
 class BackgroundCapture(threading.Thread):
-        '''
-        This class is extending threading.Thread and works as a background process.
-        This class reads the images from a image stream, saves them and puts them
-        into a que the for later process.
+    '''
+    This class is extending threading.Thread and works as a background process.
+    This class reads the images from a image stream, saves them and puts them
+    into a que the for later process.
 
-        The __init__ function takes the input arguments and initializes them.
+    The __init__ function takes the input arguments and initializes them.
 
-        The run() function reads from the image stream saves the images at a
-        specified path, and fill up a que with the framedata for later analysis
-        The funtion will continue until _stop_event is set.
+    The run() function reads from the image stream saves the images at a
+    specified path, and fill up a que with the framedata for later analysis
+    The funtion will continue until _stop_event is set.
 
-        The stop() function sets _stop_event and stops the while loop
+    The stop() function sets _stop_event and stops the while loop
 
-        Input: frequency(fps), VideoCapture, Queue()
-        Output: images, Queue()
-        '''
+    Input: frequency(fps), VideoCapture, Queue()
+    Output: images, Queue()
+    '''
     def __init__(self,fps,cap,que):
         super().__init__()
         self._stop_event = threading.Event() #initialize threading.Event as a flag to stop while loop in run()
@@ -229,7 +230,8 @@ class BackgroundCapture(threading.Thread):
         self._stop_event.set() #sets _stop_event to set
 
 #background_threat reads from the que
-def background_thread(que):
+def analyze_que(que):
+
     '''
     This function reads from the que every second and uses the process_image(Queue().get())
     to get a return value then prints the result, untill the queue is empty.
@@ -237,13 +239,23 @@ def background_thread(que):
     input: Queue()
     output: print boolean (True or False)
     '''
+    stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
     fps = cnv.getConfig()
-
-    time.sleep(3) #sleeps 3 second to make sure the que is not empty
+    blah = []
+    count = 1
+    while que.empty():
+        print('waiting for que to start')
+        time.sleep(0.5)
+        que = que
     while True:
         if not que.empty(): #checks if the que is not empty
-            print(process_image(que.get())) #prints the result of the process_image function
+            path = bufferProcessed+os.sep+str(count)+'.jpg'
+            blah.append(list(process_image(que.get(),path))) #prints the result of the process_image function
+            print(blah[-1])
+            count+=1
             time.sleep(1) #sleep timer
+
         else: #if the que is empty, the while loop breaks
             break
+    print(blah)
     print("finished que") #prints in the command prompt when the que is empty

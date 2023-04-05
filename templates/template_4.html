@@ -1,0 +1,81 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="static/javascript/socket.io.js"></script>
+<script src="static/javascript/jquery-3.5.1.js"></script>
+<link rel="stylesheet" href="static/CSS/fontawsome/all.css">
+<link rel="stylesheet" href="static/CSS/bootstrap/css/bootstrap.css">
+<link rel="stylesheet" href="static/CSS/Template3.css">
+<script src="static/CSS/bootstrap/js/bootstrap.js"></script>
+
+  <script type="text/javascript">
+    btnMode = {{btnMode|tojson}};
+    freezeMode = {{fMode|tojson}};
+    imgBool = {{img_bool|tojson}};
+    descBool = {{desc_bool|tojson}};
+    resBool = {{res_bool|tojson}};
+    resIndex = {{res_index|tojson}};
+    img_plc = ['Captured Image',{{img_plc|tojson}}];
+    an_plc =['Analyzed Image',{{an_plc|tojson}}];
+    res_plc = {{res_plc|tojson}};
+    desc_plc ={{desc_plc|tojson}};
+    pln_plc = {{plane_plc|tojson}};
+    const bgImg = new Image(); // Create new img element
+    const aImg = new Image();
+    const planesImg = new Image();
+    bgImg.src = "static/placeholder_images/background_placeholder.png";
+    aImg.src = "static/placeholder_images/background_placeholder_analysis.png"
+    planesImg.src = "static/placeholder_images/standardplanes.png";
+    var socket = io();
+    socket.on('nextimg', function(msg){
+      console.log('recieved: '+msg.value);
+      change(msg);
+      setTimeout(function() {
+        draw_frozen_image();
+      }, 100);
+    })
+    function disconnect(){
+      socket.disconnect();
+    }
+  </script>
+
+</head>
+<body class="bg-dark">
+  <nav class="navbar navbar-dark bg-secondary">
+    <a class="navbar-brand" href="/" onclick="disconnect()">Home</a>
+  </nav>
+  <br>
+  <div class="container-fluid" >
+
+      <div class="row">
+
+        <div class="col border"  id="sqr1">
+
+        </div>
+
+        <div class="col border" id="sqr2">
+
+        </div>
+
+      </div>
+
+      <div class="row" >
+
+        <div class="col border" id="sqr3">
+
+
+        </div>
+
+        <div class="col mh-100 border" id="sqr4">
+
+        </div>
+
+      </div>
+  </div>
+
+</body>
+<script src="static/javascript/template_4.js"></script>
+
+
+
+</html>

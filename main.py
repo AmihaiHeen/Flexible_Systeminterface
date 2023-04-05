@@ -26,62 +26,107 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 myp = os.path.realpath(os.path.dirname(__file__))
 que = Queue()
 
-
 @app.route('/', methods=['GET','POST'])
 def beginning():
     #freezeThread = threading.Thread(target=vc.freeze_image_detection)
     #freezeThread.start()
+    cnv.getConfigReturns()
+    print()
     return render_template('index.html')
 
 @app.route('/template_1', methods=['GET','POST'])
 def template_1():
     path = ''
 
-    fps = cnv.getConfig()
+    buttonMode,freezeMode,backgroundMode,fps = cnv.getConfig()
     save.make_dirs(myp)
     return render_template('template_1.html', path = path, fps = fps)
 
 
 @app.route('/template_2', methods=['GET','POST'])
 def template_2():
-    imgpath = 'static/newimage.jpg'
-    vc.freeze_image_detection(imgpath)
-    return render_template('template_2.html', imgpath = imgpath)
+    cap = cv2.VideoCapture(0)
+    global f
+    f = vc.freezeDetection(socketio,cap)
+    f.start()
+    return render_template('template_2.html')
 
 @app.route('/template_3', methods=['GET','POST'])
 def template_3():
-    fps = cnv.getConfig()
+
+    buttonMode,freezeMode,backgroundMode,fps = cnv.getConfig()
+    '''
     save.make_dirs(myp)
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
     global f
-    f = vc.frozenThread(socketio,cap)
+    f = vc.freezeDetection(socketio,cap)
     global b
     b = vc.BackgroundCapture(fps,cap,que)
     f.start()
     b.start()
+    '''
     return render_template('template_3.html',fps=fps)
 
-@socketio.on('freeze')
+
+@app.route('/template_4', methods=['GET', 'POST'])
+def template_4():
+    buttonMode,freezeMode,backgroundMode,fps = cnv.getConfig()
+    save.make_dirs(myp)
+    cap = cv2.VideoCapture(0)
+    image_bool,image_index,desc_bool,desc_index,res_bool,res_amount,res_index= cnv.getConfigReturns()
+    cap_img,an_img,res_plc,desc_plc,plane_plc = cnv.getConfigInterface()
+    print(res_index)
+    if freezeMode:
+        global f
+        f = vc.freezeDetection(socketio,cap)
+        f.start()
+
+    if backgroundMode:
+        global b
+        b = vc.BackgroundCapture(fps,cap,que)
+        b.start()
+
+    return render_template('template_4.html', btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,desc_bool = desc_bool,res_bool = res_bool, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc)
+
+
+@app.route('/buffer_page', methods=['GET','POST'])
+def buffer_page():
+    stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
+    buffer = os.listdir(bufferProcessed)
+    bufferlist=[]
+    for i in buffer:
+        bufferlist.append(bufferProcessed+os.sep+i)
+    return render_template('buffer_page.html', bufferlist = bufferlist)
+
+
+@socketio.on('freez')
 def handlemessage():
         global thread
         thread = None
         with thread_lock:
             if thread is None:
-                thread = socketio.start_background_task(vc.background_thread,que)
+                thread = socketio.start_background_task(vc.analyze_que,que)
 
 
 @socketio.on('disconnect')
 def disconnect():
     #connect = False
     #vc.freeze_with_socket(socketio,connect)
+    buttonMode,freezeMode,backgroundMode,fps = cnv.getConfig()
+
+    if(freezeMode):
+        f.stop()
+        f.join()
+    if(backgroundMode):
+        b.stop()
+        b.join()
+
+
+@socketio.on('stop')
+def stop():
     f.stop()
-    b.stop()
-    b.join()
-
     f.join()
-
-
 @socketio.on('clientImage')
 def clientImg(clientImage):
     stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()

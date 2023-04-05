@@ -1,7 +1,7 @@
 
 
 window.onload = function(){
-  //var img = document.getElementById('frozen');
+  var img = document.getElementById('frozen');
   var canvas = document.getElementById('canvas');
   var canvas_processed = document.getElementById('canvas_draw');
   var socketCan = document.getElementById('socketCanvas');
@@ -10,8 +10,8 @@ window.onload = function(){
   var ctx_square = canvas_processed.getContext('2d');
   var planesCan = document.getElementById('Canvasplanes');
   var ctx_planes = planesCan.getContext('2d');
-  //img.height = img.naturalHeight;
-  //img.width = img.naturalWidth;
+  img.height = img.naturalHeight;
+  img.width = img.naturalWidth;
 
   var bgctx = imageCan.getContext('2d');
   //console.log(imageCan.width)

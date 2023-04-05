@@ -1,0 +1,16 @@
+.foo {
+   float: left;
+   width: 20px;
+   height: 20px;
+   margin: 5px;
+   border: 1px solid rgba(0, 0, 0, .2);
+}
+.green {
+   background: #40EB16;
+}
+.red {
+   background: #E31919;
+}
+.yellow {
+   background: #F0F00E;
+}

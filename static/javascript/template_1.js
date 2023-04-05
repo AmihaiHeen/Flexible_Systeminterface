@@ -50,14 +50,14 @@ window.onload = function(){
   var socketCan = document.getElementById('socketCanvas');
   var context = socketCan.getContext('2d')
   console.log(FPS)
-  setInterval(() => {
+/*  setInterval(() => {
   socketCan.width = feed.naturalWidth;
   socketCan.height = feed.naturalHeight;
   context.drawImage(feed, 0, 0, socketCan.width, socketCan.height);
   var data = socketCan.toDataURL('image/jpeg', 0.5);
   context.clearRect(0, 0, socketCan.width, socketCan.height);
   socket.emit('buffer_image', data);
-}, 1000 / FPS);
+}, 1000 / FPS);*/
 
 }
 socket.on('captured_image', function(img){

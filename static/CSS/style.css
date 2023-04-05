@@ -73,7 +73,6 @@ float:left;
 }
 .result_div, .describtion_div{
   margin-top: 3rem;
-  outline: gray 3px solid;
   height:250px;
   width:100%;
   display:block;

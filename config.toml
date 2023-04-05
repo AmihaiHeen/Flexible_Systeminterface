@@ -1,0 +1,61 @@
+[communication]
+
+
+
+[image_capture]
+
+
+image_capture_button = false
+
+image_capture_freeze = false
+
+image_capture_background = false
+
+[image_capture.resolution]
+
+resolution = [640,480]
+
+[fps]
+fps = 30
+
+[interface]
+#the interface is split in 4 different squares 2 rows an 2 columns
+#The format is a follows
+#[1][2]
+#[3][4]
+#pick where you want to place the different elements
+#If there are anything not needed or not gonna be visualized set value to 0
+  [interface.images]
+  captured_image_placement = 1
+  analyzed_image_placement = 2
+  [interface.results]
+  result_list_placement = 4
+  description_placement = 4
+  [interface.standardplanes]
+  standardplanes_placement = 4
+
+
+
+[returns]
+
+  [returns.image]
+
+  image_bool = true
+
+  return_index = 0
+
+  image_format = '.png'
+
+  [returns.description]
+
+  description_bool = true
+
+  return_index = 1
+
+  [returns.results]
+
+  result_bool =true
+
+  return_amount = 3
+
+  result_index = [5,7,9,4,6,2]
