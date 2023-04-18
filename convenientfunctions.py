@@ -1,7 +1,7 @@
 import os
 import sys
 import toml
-
+import importlib
 
 #Path to script
 myp = os.path.realpath(os.path.dirname(__file__))
@@ -29,10 +29,14 @@ def getConfig():
     buttonMode = config['image_capture']['image_capture_button']
     freezeMode = config['image_capture']['image_capture_freeze']
     backgroundMode = config['image_capture']['image_capture_background']
-    fps = config['fps']['fps']
 
-    return buttonMode, freezeMode, backgroundMode, fps
+    return buttonMode, freezeMode, backgroundMode
+def getImgCapCon():
+    config = toml.load('config.toml')
 
+    fps = config['image_capture']['fps']['fps']
+    resolution = config['image_capture']['resolution']['resolution']
+    return fps,resolution
 def getConfigInterface():
     config = toml.load('config.toml')
     images = config['interface']['images']
@@ -67,3 +71,12 @@ def getConfigReturns():
         res_amount = ""
         res_index = ""
     return image_bool,image_index,desc_bool,desc_index,res_bool,res_amount,res_index
+
+def get_function():
+    config = toml.load('config.toml')
+    module_name = config['model']['module']
+    funtion_name = config['model']['function']
+    module = importlib.import_module(module_name)
+    function = getattr(module,funtion_name)
+    print('getting model')
+    return function

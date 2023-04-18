@@ -6,12 +6,16 @@ import serial
 import numpy as np
 import uuid
 import shutil
+import signal
+
 import threading
+import base64
+import subprocess
 import video_capture as vc
 import convenientfunctions as cnv #imports con
 import image_save as save #imports image_save.py
 
-capture_mode = 0
+capture_mode = 1
 
 #capture_Frames funciton to read frames from specified source
 #used to send all image frames to the interface
@@ -104,6 +108,18 @@ def still_frozen(prevdiff, currdiff): #takes differences as argument
     else: #if the image is frozen no more
         return False #return false and a new image can be captured
 
+def singleprocess(frame,path,count):
+    fnc = cnv.get_function()
+    resList = fnc(frame)
+    cv2.imwrite(path+os.sep+'frame-'+str(count)+'.jpg',resList[0])
+    resList = list(resList)
+    retval, buffer = cv2.imencode('.jpg', resList[0])
+    im_byte= buffer.tobytes()
+    jpg_as_text = base64.b64encode(im_byte).decode()
+    resList[0] = jpg_as_text
+    return resList
+
+
 #Function for "processing" the image
 def process_image(frame,path):#takes a frame as an argument
     '''
@@ -155,19 +171,28 @@ class freezeDetection(threading.Thread):
         stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
         count = 1 #initialize counter to make image save path
         success, frame = self.cap.read() #reads first the frame captured
-        prevdiff = 0; #initialize previous difference for still_frozen function
+        prevdiff = 1; #initialize previous difference for still_frozen function
         while not self._stop_event.is_set(): #while loop continuoing untill stopevent is set in stop() function
             prev = frame.copy() #sets previous frame captured
             success, frame = self.cap.read() #captures new frame
-            diff = np.sum(np.abs(prev-frame)) #calculate difference between previous and current frame
+            diff = np.sum(np.abs(prev[50:,:]-frame[50:,:])) #calculate difference between previous and current frame
+            print(diff,prevdiff)
             print(success,count,np.sum(np.abs(prev-frame))) # prints output
-            if (still_frozen(prevdiff, diff)==False): #checks if the image is still froxen
+            if not (still_frozen(prevdiff, diff)): #checks if the image is still froxen
                 if (diff == 0): # checks if the different is 0 and the image is frozen
                     path = capImgPath+os.sep+str(count)+'.jpg' #initialize the path for image to be saved
                     cv2.imwrite(path, frame) #saves the frozen image to the specified path
-                    count+=1 # count is updated
+                     # count is updated
                     print('sending works!!!') #print sending works
                     self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
+                    proFrame = frame.copy()
+                    resList = singleprocess(proFrame,clientProcessed,count)
+                    self.socketio.emit('output',{'res':resList[:]})
+
+                    #imgPro.join()
+                    print('this is the prev diff '+str(prevdiff))
+                    print('stopped')
+                    count+=1
                     self.socketio.sleep(0.5) #socket sleep timer
                     #print('blah')
                             #return path
@@ -228,6 +253,40 @@ class BackgroundCapture(threading.Thread):
     #stop function setting the _stop_event and thereby stopping the while loop
     def stop(self):
         self._stop_event.set() #sets _stop_event to set
+
+class BCAnalysis(threading.Thread):
+    def __init__(self):
+        super().__init__()
+    def run(self):
+        stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
+        fps, resolution = cnv.getImgCapCon()
+
+        ffmpeg_path = 'ffmpeg'
+
+        input_stream = 'video="DVI2USB 3.0 D2S342374"'
+
+        command = [ffmpeg_path,'-i',input_stream,'-f','image2', f'{bufferPath}/frame-%d.jpg']
+        newCommand = 'ffmpeg -f dshow -i video="DVI2USB 3.0 D2S342374" -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
+        print(command)
+        global process
+        process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+
+        framecount = 1
+        time.sleep(2)
+
+        while True:
+            filename = f'{bufferPath}/frame-{framecount}.jpg'
+            if not os.path.exists(filename):
+                break
+            frame = cv2.imread(filename)
+            resList = singleprocess(frame,bufferProcessed,framecount)
+            #print('list of results'+str(resList))
+            framecount +=1
+            time.sleep(2)
+    def stop(self):
+        global process
+        process.send_signal(signal.CTRL_BREAK_EVENT)
+        process.kill()
 
 #background_threat reads from the que
 def analyze_que(que):

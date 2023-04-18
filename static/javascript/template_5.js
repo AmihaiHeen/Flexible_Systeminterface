@@ -1,8 +1,8 @@
+
 var sqr1 = document.getElementById('sqr1')
 var sqr2 = document.getElementById('sqr2')
 var sqr3 = document.getElementById('sqr3')
 var sqr4 = document.getElementById('sqr4')
-
 
 window.onload = function(){
 
@@ -21,15 +21,16 @@ window.onload = function(){
   //createButton();
 
   //createRes(res_plc);
-
-  if(img_plc[1] !=0){
+  createCardNav(img_plc)
   createCanvas(img_plc);
-  }
-  if(an_plc[1] !=0){
   createCanvas(an_plc);
-  }
   draw_images();
 
+
+  $('#ImageList a').on('click', function (e) {
+    e.preventDefault()
+    $(this).tab('show')
+  })
 }
 
 socket.on('output', function(output){
@@ -45,13 +46,95 @@ socket.on('output', function(output){
   createResList(outR[1])
   //var returnArr = output.value;
 })
+function createCardNav(pos){
+  // create div with class "card bg-secondary"
+const card = document.createElement('div');
+card.classList.add('card', 'bg-secondary');
 
+// create card header
+const cardHeader = document.createElement('div');
+cardHeader.classList.add('card-header','bg-dark');
+
+// create unordered list with class "nav nav-tabs card-header-tabs"
+const ul = document.createElement('ul');
+ul.classList.add('nav', 'nav-tabs', 'card-header-tabs');
+ul.setAttribute('id', 'ImageList');
+ul.setAttribute('role', 'tablist');
+
+// create first list item with class "nav-item"
+const li1 = document.createElement('li');
+li1.classList.add('nav-item','w-50');
+
+// create first anchor with class "nav-link active"
+const a1 = document.createElement('a');
+a1.classList.add('nav-link', 'active');
+a1.setAttribute('href', '#capImageDiv');
+a1.setAttribute('role', 'tab');
+a1.setAttribute('aria-controls', 'capImageDiv');
+a1.setAttribute('aria-selected', 'true');
+a1.textContent = 'Captured image';
+
+// create second list item with class "nav-item"
+const li2 = document.createElement('li');
+li2.classList.add('nav-item','w-50');
+
+// create second anchor with class "nav-link"
+const a2 = document.createElement('a');
+a2.classList.add('nav-link');
+a2.setAttribute('href', '#analyzedImageDiv');
+a2.setAttribute('role', 'tab');
+a2.setAttribute('aria-controls', 'analyzedImageDiv');
+a2.setAttribute('aria-selected', 'false');
+a2.textContent = 'Analyzed image';
+
+// append anchors to list items, and list items to unordered list
+li1.appendChild(a1);
+li2.appendChild(a2);
+ul.appendChild(li1);
+ul.appendChild(li2);
+
+// append unordered list to card header
+cardHeader.appendChild(ul);
+
+// create card body
+const cardBody = document.createElement('div');
+cardBody.classList.add('card-body');
+
+// create tab content div with class "tab-content mt-3"
+const tabContent = document.createElement('div');
+tabContent.classList.add('tab-content', 'mt-3');
+
+// create first tab pane with class "tab-pane active" and id "capImageDiv"
+const tabPane1 = document.createElement('div');
+tabPane1.classList.add('tab-pane', 'active');
+tabPane1.setAttribute('id', 'capImageDiv');
+tabPane1.setAttribute('role', 'tabpanel');
+
+// create second tab pane with class "tab-pane" and id "analyzedImageDiv"
+const tabPane2 = document.createElement('div');
+tabPane2.classList.add('tab-pane');
+tabPane2.setAttribute('id', 'analyzedImageDiv');
+tabPane2.setAttribute('role', 'tabpanel');
+tabPane2.setAttribute('aria-labelledby', 'history-tab');
+
+// append tab panes to tab content
+tabContent.appendChild(tabPane1);
+tabContent.appendChild(tabPane2);
+
+// append tab content to card body
+cardBody.appendChild(tabContent);
+
+// append card header and card body to card
+card.appendChild(cardHeader);
+card.appendChild(cardBody);
+document.getElementById('sqr'+pos[1]).appendChild(card)
+}
 
 function createRow(plc){
   console.log('hi'+plc)
   var row = document.createElement('div');
   row.setAttribute('id','sqr'+plc+'1')
-  row.setAttribute('class','row p-3')
+  row.setAttribute('class','row')
   document.getElementById('sqr'+plc+'').appendChild(row)
   return 'sqr'+plc+'1'
 }
@@ -87,25 +170,23 @@ function createCanvas(place){
     console.log(place[1])
     var cCanvas = document.createElement('canvas');
     if(place[0] == 'Captured Image'){
+      var nav_tab = document.getElementById('capImageDiv')
       cCanvas.setAttribute('id', 'imgCanvas');
     }
     else{
+      var nav_tab = document.getElementById('analyzedImageDiv')
+
       cCanvas.setAttribute('id', 'canvas_draw');
     }
     console.log('col'+place[1]+'');
-    cCanvas.setAttribute('class','w-100 p-3')
+    cCanvas.setAttribute('class','w-100')
     h = window.innerHeight/2;
     w = window.innerWidth/2
     cCanvas.setAttribute('height',''+480+'px');
     cCanvas.setAttribute('width',''+640+'px');
     var title = document.createElement('h2');
-    title.setAttribute('class','text-secondary pl-3')
-    var tTxt = document.createTextNode(place[0]);
-    title.appendChild(tTxt);
 
-    document.getElementById('sqr'+place[1]+'').appendChild(title);
-
-    document.getElementById('sqr'+place[1]+'').appendChild(cCanvas);
+    nav_tab.appendChild(cCanvas);
   }
 }
 
@@ -134,7 +215,7 @@ function createDesc(plc,b){
   if(descBool){
     var descbox = document.createElement('div');
     descbox.setAttribute('id','desc_box');
-    descbox.setAttribute('class', 'accordition col-6 col-sm-6 mt-1 w-50 ');
+    descbox.setAttribute('class', 'accordition col-6 col-sm-6  w-50 ');
 
     var descCard = document.createElement('div');
     descCard.setAttribute('class', 'card bg-secondary');
@@ -190,7 +271,7 @@ function createRes(plc,b){
   if(resBool){
     var resbox = document.createElement('div');
     resbox.setAttribute('id','res_box');
-    resbox.setAttribute('class', 'accordition col-6 col-sm-6 mt-1 w-50');
+    resbox.setAttribute('class', 'accordition col-6 col-sm-6 w-50');
 
     var resCard = document.createElement('div');
     resCard.setAttribute('class', ' card bg-secondary');
@@ -272,6 +353,4 @@ function get_img(){
     imageCan.height = feed.naturalHeight;
     imgctx.drawImage(feed,0,0,feed.width, feed.height);
   }, 100);
-
-
 }

@@ -1,22 +1,28 @@
 [communication]
 
 
+[model]
+
+module = "Test_model"
+
+function = "modelOut"
+
 
 [image_capture]
 
 
 image_capture_button = false
 
-image_capture_freeze = false
+image_capture_freeze = true
 
-image_capture_background = false
+image_capture_background = true
 
 [image_capture.resolution]
 
 resolution = [640,480]
 
-[fps]
-fps = 30
+[image_capture.fps]
+fps = 1
 
 [interface]
 #the interface is split in 4 different squares 2 rows an 2 columns
@@ -29,8 +35,8 @@ fps = 30
   captured_image_placement = 1
   analyzed_image_placement = 2
   [interface.results]
-  result_list_placement = 4
-  description_placement = 4
+  result_list_placement = 2
+  description_placement = 2
   [interface.standardplanes]
   standardplanes_placement = 4
 

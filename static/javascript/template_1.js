@@ -69,8 +69,21 @@ socket.on('captured_image', function(img){
   imageCan.height = canImg.naturalHeight;
   imgctx.drawImage(img,0,0,imageCan.width, imageCan.height);
 
-})
 
+})
+socket.on('output', function(output){
+  console.log(output.res)
+  var outR = output.res;
+  var newImg = new Image();
+  newImg.src = "data:image/jpeg;base64,"+outR[0];
+  var canvas_processed = document.getElementById('canvas_draw');
+  var ctx_square = canvas_processed.getContext('2d');
+  setTimeout(function() {
+    ctx_square.drawImage(newImg,0,0,canvas_processed.width, canvas_processed.height);
+  }, 100);
+  random_percantage(outR[1])
+  //var returnArr = output.value;
+})
 
 
 
@@ -93,12 +106,12 @@ function get_img(){
   canvas_processed.height = feed.height;
   imgctx.drawImage(feed,0,0,feed.width, feed.height);
   //ctx.drawImage(img,0,0,canvas.width, canvas.height);
-  ctx_square.drawImage(feed,0,0,canvas_processed.width, canvas_processed.height);
+  /*ctx_square.drawImage(feed,0,0,canvas_processed.width, canvas_processed.height);
   ctx_square.globalAlpha = 0.3;
 
   ctx_square.drawImage(img2,0,0,canvas_processed.width, canvas_processed.height);
-  //draw_square(canvas_processed,ctx_square);
-  random_percantage();
+  //draw_square(canvas_processed,ctx_square);*/
+  //random_percantage();
   imgData = imageCan.toDataURL('image/jpeg', 1.0);
   socket.emit('clientImage', imgData);
 
@@ -116,28 +129,30 @@ function capture_video(){
 
   ctx_square.drawImage(img,0,0,canvas_processed.width, canvas_processed.height);
 }
-function random_percantage(){
+function random_percantage(outArr){
   var colors = ['#F75151','#a0e77d','yellow'];
   var labels = ['Heart','Head','Abdomen','Left foot','Right foot', 'Right hand', 'Left hand']
-  var head_detected = 90+10*Math.random();
-  var abdominal_planes = 80+20*Math.random();
-  var somethingsomething = 20+80*Math.random();
-  var something_detected = 10+90*Math.random();
+  var head_detected = outArr[0];
+  var abdominal_planes = outArr[1];
+  var somethingsomething = outArr[2];
+  var something_detected = outArr[2];
 
   document.getElementById('imgQ').style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
-  document.getElementById("headD").style.backgroundColor = '#a0e77d';
-  document.getElementById("abdom").value = abdominal_planes.toFixed(2)+"%";
-  document.getElementById("headD").value = head_detected.toFixed(2)+"%";
-  document.getElementById("SD").value = something_detected.toFixed(2)+"%";
+  document.getElementById("headD").value = head_detected;
+  document.getElementById("abdom").value = abdominal_planes;
+  document.getElementById("headD").value = head_detected;
+  document.getElementById("SD").value = something_detected;
   document.getElementById("SS").value = labels[Math.floor(Math.random()*labels.length)];
-  if(something_detected < 50){
-    document.getElementById("SD").style.backgroundColor = '#F75151';
+  if(something_detected >= 8){
+    document.getElementById("SD").style.backgroundColor = '#a0e77d';
+
   }
-  else if(something_detected > 50 && something_detected < 90){
+  else if(something_detected >= 5 && something_detected < 8){
     document.getElementById("SD").style.backgroundColor = 'yellow';
   }
   else{
-    document.getElementById("SD").style.backgroundColor = '#a0e77d';
+    document.getElementById("SD").style.backgroundColor = '#F75151';
+
   }
   /*if(somethingsomething < 50){
     document.getElementById("SS").style.backgroundColor = '#F75151';
@@ -148,14 +163,27 @@ function random_percantage(){
   else{
     document.getElementById("SS").style.backgroundColor = '#a0e77d';
   }*/
-  if(abdominal_planes < 50){
-    document.getElementById("abdom").style.backgroundColor = '#F75151';
+  if(head_detected >= 8){
+    document.getElementById("headD").style.backgroundColor = '#a0e77d';
+
   }
-  else if(abdominal_planes> 50 && abdominal_planes < 90){
+  else if(head_detected >= 5 && head_detected < 8){
+    document.getElementById("headD").style.backgroundColor = 'yellow';
+  }
+  else{
+    document.getElementById("headD").style.backgroundColor = '#F75151';
+
+  }
+  if(abdominal_planes >= 8){
+    document.getElementById("abdom").style.backgroundColor = '#a0e77d';
+
+  }
+  else if(abdominal_planes >= 5 && abdominal_planes < 8){
     document.getElementById("abdom").style.backgroundColor = 'yellow';
   }
   else{
-    document.getElementById("abdom").style.backgroundColor = '#a0e77d';
+    document.getElementById("abdom").style.backgroundColor = '#F75151';
+
   }
 
 }

@@ -57,3 +57,4 @@ def save_from_dataUrl(data,path):
         currImg = path+os.sep+str(count)+'.jpg'
     with open(currImg, 'w+b') as fd:
         fd.write(binary_data)
+    return currImg    
