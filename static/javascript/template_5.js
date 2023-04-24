@@ -1,4 +1,3 @@
-
 var sqr1 = document.getElementById('sqr1')
 var sqr2 = document.getElementById('sqr2')
 var sqr3 = document.getElementById('sqr3')
@@ -44,8 +43,16 @@ socket.on('output', function(output){
     ctx_square.drawImage(newImg,0,0,canvas_processed.width, canvas_processed.height);
   }, 100);
   createResList(outR[1])
+  createDescText(outR[2])
+  document.getElementById('analyzedImageDiv').classList.add('show')
   //var returnArr = output.value;
 })
+window.onunload = function(){
+  disconnect();
+}
+window.onbeforeunload = function(){
+  disconnect();
+}
 function createCardNav(pos){
   // create div with class "card bg-secondary"
 const card = document.createElement('div');
@@ -67,7 +74,7 @@ li1.classList.add('nav-item','w-50');
 
 // create first anchor with class "nav-link active"
 const a1 = document.createElement('a');
-a1.classList.add('nav-link', 'active');
+a1.classList.add('nav-link', 'active','text-light');
 a1.setAttribute('href', '#capImageDiv');
 a1.setAttribute('role', 'tab');
 a1.setAttribute('aria-controls', 'capImageDiv');
@@ -80,7 +87,8 @@ li2.classList.add('nav-item','w-50');
 
 // create second anchor with class "nav-link"
 const a2 = document.createElement('a');
-a2.classList.add('nav-link');
+a2.classList.add('nav-link','text-light');
+a2.setAttribute('id', 'analyzedLink')
 a2.setAttribute('href', '#analyzedImageDiv');
 a2.setAttribute('role', 'tab');
 a2.setAttribute('aria-controls', 'analyzedImageDiv');
@@ -149,6 +157,14 @@ function createButton(){
     btn.appendChild(btntxt);
     document.getElementById('col_1_row_2').appendChild(btn);
   }
+
+}
+function createDescText(text){
+  var descP = document.createElement('p');
+  descP.setAttribute('class','text-justify p-2');
+  var pTxt = document.createTextNode(text);
+  descP.appendChild(pTxt);
+  document.getElementById('desc_div').appendChild(descP)
 
 }
 
@@ -257,7 +273,7 @@ function createDesc(plc,b){
     descdiv.setAttribute('id','desc_div');
     descdiv.setAttribute('style','overflow-y:scroll;max-height:15rem;')
 
-    descdiv.appendChild(descP);
+    //descdiv.appendChild(descP);
 
     descCard.appendChild(descCH);
     descCard.appendChild(descdiv);

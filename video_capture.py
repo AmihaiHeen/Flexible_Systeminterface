@@ -171,10 +171,11 @@ class freezeDetection(threading.Thread):
         stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
         count = 1 #initialize counter to make image save path
         success, frame = self.cap.read() #reads first the frame captured
-        prevdiff = 1; #initialize previous difference for still_frozen function
+        prevdiff = 0; #initialize previous difference for still_frozen function
         while not self._stop_event.is_set(): #while loop continuoing untill stopevent is set in stop() function
             prev = frame.copy() #sets previous frame captured
             success, frame = self.cap.read() #captures new frame
+
             diff = np.sum(np.abs(prev[50:,:]-frame[50:,:])) #calculate difference between previous and current frame
             print(diff,prevdiff)
             print(success,count,np.sum(np.abs(prev-frame))) # prints output
@@ -182,7 +183,6 @@ class freezeDetection(threading.Thread):
                 if (diff == 0): # checks if the different is 0 and the image is frozen
                     path = capImgPath+os.sep+str(count)+'.jpg' #initialize the path for image to be saved
                     cv2.imwrite(path, frame) #saves the frozen image to the specified path
-                     # count is updated
                     print('sending works!!!') #print sending works
                     self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
                     proFrame = frame.copy()
@@ -192,7 +192,7 @@ class freezeDetection(threading.Thread):
                     #imgPro.join()
                     print('this is the prev diff '+str(prevdiff))
                     print('stopped')
-                    count+=1
+                    count+=1 # count is updated
                     self.socketio.sleep(0.5) #socket sleep timer
                     #print('blah')
                             #return path
