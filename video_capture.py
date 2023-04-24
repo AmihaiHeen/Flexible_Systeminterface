@@ -7,7 +7,7 @@ import numpy as np
 import uuid
 import shutil
 import signal
-
+import platform
 import threading
 import base64
 import subprocess
@@ -264,12 +264,17 @@ class BCAnalysis(threading.Thread):
         ffmpeg_path = 'ffmpeg'
 
         input_stream = 'video="DVI2USB 3.0 D2S342374"'
-
+        os_name = platform.system()
+        print('operation system: '+os_name)
         command = [ffmpeg_path,'-i',input_stream,'-f','image2', f'{bufferPath}/frame-%d.jpg']
         newCommand = 'ffmpeg -f dshow -i video="DVI2USB 3.0 D2S342374" -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
         print(command)
         global process
-        process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        if os_name == 'Windows':
+            process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        if os_name == 'Linux':
+            process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True)
+
 
         framecount = 1
         time.sleep(2)
