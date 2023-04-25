@@ -44,7 +44,7 @@ socket.on('output', function(output){
   }, 100);
   createResList(outR[1])
   createDescText(outR[2])
-  document.getElementById('analyzedImageDiv').classList.add('show')
+  document.getElementById('analyzedLink').click()
   //var returnArr = output.value;
 })
 window.onunload = function(){
@@ -195,7 +195,7 @@ function createCanvas(place){
       cCanvas.setAttribute('id', 'canvas_draw');
     }
     console.log('col'+place[1]+'');
-    cCanvas.setAttribute('class','w-100')
+    //cCanvas.setAttribute('class','w-100')
     h = window.innerHeight/2;
     w = window.innerWidth/2
     cCanvas.setAttribute('height',''+480+'px');

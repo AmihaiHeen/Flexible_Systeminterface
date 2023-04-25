@@ -267,7 +267,7 @@ class BCAnalysis(threading.Thread):
         os_name = platform.system()
         print('operation system: '+os_name)
         command = [ffmpeg_path,'-i',input_stream,'-f','image2', f'{bufferPath}/frame-%d.jpg']
-        newCommand = 'ffmpeg -f dshow -i video="DVI2USB 3.0 D2S342374" -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
+        newCommand = 'ffmpeg -f dshow -i video="USB Capture HDMI+" -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
         print(command)
         global process
         if os_name == 'Windows':
@@ -275,11 +275,11 @@ class BCAnalysis(threading.Thread):
         if os_name == 'Linux':
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True)
 
-
         framecount = 1
         time.sleep(2)
 
         while True:
+
             filename = f'{bufferPath}/frame-{framecount}.jpg'
             if not os.path.exists(filename):
                 break
@@ -291,6 +291,87 @@ class BCAnalysis(threading.Thread):
     def stop(self):
         global process
         process.send_signal(signal.CTRL_BREAK_EVENT)
+        process.kill()
+class ffmpeg_freezeDetection(threading.Thread):
+    def __init__(self, socketio):
+        super().__init__()
+        self.socketio = socketio
+        self._stop_event = threading.Event()
+    def run(self):
+        stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
+        fps, resolution = cnv.getImgCapCon()
+
+        ffmpeg_path = 'ffmpeg'
+
+        input_stream = 'video="DVI2USB 3.0 D2S342374"'
+        os_name = platform.system()
+        print('operation system: '+os_name)
+        if os_name == 'Windows':
+        if os_name == 'Windows':
+            newCommand = 'ffmpeg -f dshow -loglevel quiet -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="USB Capture HDMI+" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
+            global process
+            process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        if os_name == 'Linux':
+
+            global process
+            newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i /dev/video0 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
+            process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
+        count = 1
+        framecount = 1
+        time.sleep(2)
+        print('hello')
+        filename = f'{bufferPath}/frame-{framecount}.jpg'
+        frame = cv2.imread(filename)
+        errorframe = cv2.imread('C:/Users/ami/OneDrive/Skrivebord/EngineeringProject/Flexible_Systeminterface/static/placeholder_images/unsupported_frame.jpg')
+        prevdiff = 0
+        while not self._stop_event.is_set():
+            print('hi')
+            dir = os.listdir(bufferPath)
+            print(len(dir))
+            filename = dir[-1]
+            print(f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg')
+            prev = frame.copy()
+            frame = cv2.imread(f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg')
+            #print('still error image'+str(np.sum(np.abs(errorframe[50:,:]-frame[50:,:]))))
+
+            while np.sum(np.abs(errorframe[50:,:]-frame[50:,:])) == 0:
+
+                print('still error image'+str(np.sum(np.abs(errorframe[50:,:]-frame[50:,:]))))
+                dir = os.listdir(bufferPath)
+                filename = dir[-1]
+                print(f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg')
+                prev = frame.copy()
+                frame = cv2.imread(f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg')
+            diff = np.sum(np.abs(prev[50:,:]-frame[50:,:])) #calculate difference between previous and current frame
+            print('the difference is ',diff)
+
+            #print(success,count,np.sum(np.abs(prev-frame))) # prints output
+            if not (still_frozen(prevdiff, diff)): #checks if the image is still froxen
+                if (diff == 0): # checks if the different is 0 and the image is frozen
+                    path = capImgPath+os.sep+str(count)+'.jpg' #initialize the path for image to be saved
+                    cv2.imwrite(path, frame) #saves the frozen image to the specified path
+                    print('sending works!!!') #print sending works
+                    self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
+                    proFrame = frame.copy()
+                    resList = singleprocess(proFrame,clientProcessed,count)
+                    self.socketio.emit('output',{'res':resList[:]})
+
+                    #imgPro.join()
+                    print('this is the prev diff '+str(prevdiff))
+                    print('stopped')
+                    count+=1 # count is updated
+                    self.socketio.sleep(0.5) #socket sleep timer
+                    #print('blah')
+                            #return path
+                prevdiff = diff #sets previous difference to new difference
+            time.sleep(1/fps) #half of nyquist limit
+    def stop(self):
+        self._stop_event.set()
+        global process
+        if platform.system() == 'Windows':
+       		process.send_signal(signal.CTRL_BREAK_EVENT)
+       	if platform.system() == 'Linux':
+       		os.killpg(os.getpgid(process.pid),signal.SIGTERM)
         process.kill()
 
 #background_threat reads from the que

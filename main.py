@@ -47,7 +47,7 @@ def template_1():
 
 @app.route('/template_2', methods=['GET','POST'])
 def template_2():
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     global f
     f = vc.freezeDetection(socketio,cap)
     f.start()
@@ -82,16 +82,17 @@ def template_4():
     image_bool,image_index,desc_bool,desc_index,res_bool,res_amount,res_index= cnv.getConfigReturns()
     cap_img,an_img,res_plc,desc_plc,plane_plc = cnv.getConfigInterface()
     print(res_index)
+    if backgroundMode:
+        global b
+            #b = vc.BackgroundCapture(fps,cap,que)
+        b = vc.BCAnalysis()
+        b.start()
     if freezeMode:
         global f
         f = vc.freezeDetection(socketio,cap)
         f.start()
 
-    if backgroundMode:
-        global b
-        #b = vc.BackgroundCapture(fps,cap,que)
-        b = vc.BCAnalysis()
-        b.start()
+
 
     return render_template('template_4.html', btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,desc_bool = desc_bool,res_bool = res_bool, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc)
 
@@ -106,15 +107,17 @@ def template_5():
     print(res_index)
     if freezeMode:
         global f
-        f = vc.freezeDetection(socketio,cap)
-        f.start()
+        #f = vc.freezeDetection(socketio,cap)
+        f = vc.ffmpeg_freezeDetection(socketio)
 
+        f.start()
+    '''
     if backgroundMode:
         global b
         #b = vc.BackgroundCapture(fps,cap,que)
         b = vc.BCAnalysis()
         b.start()
-
+    '''
     return render_template('template_5.html', btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,desc_bool = desc_bool,res_bool = res_bool, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc)
 
 @app.route('/buffer_page', methods=['GET','POST'])
@@ -145,9 +148,9 @@ def disconnect():
     if(freezeMode):
         f.stop()
         f.join()
-    if(backgroundMode):
-        b.stop()
-        b.join()
+    #if(backgroundMode):
+    #    b.stop()
+    #    b.join()
 
 
 @socketio.on('stop')

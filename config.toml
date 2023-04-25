@@ -22,7 +22,7 @@ image_capture_background = true
 resolution = [640,480]
 
 [image_capture.fps]
-fps = 1
+fps = 4
 
 [interface]
 #the interface is split in 4 different squares 2 rows an 2 columns
