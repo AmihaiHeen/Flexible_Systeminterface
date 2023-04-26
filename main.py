@@ -11,6 +11,9 @@ import base64
 from multiprocess import Process, Queue, Lock
 from array import *
 #from statistics import mean
+import imagehash
+from PIL import Image
+
 from threading import Lock
 import cv2
 import numpy as np

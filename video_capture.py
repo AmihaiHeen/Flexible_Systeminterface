@@ -14,6 +14,8 @@ import subprocess
 import video_capture as vc
 import convenientfunctions as cnv #imports con
 import image_save as save #imports image_save.py
+import imagehash
+from PIL import Image
 
 capture_mode = 1
 
@@ -306,14 +308,16 @@ class ffmpeg_freezeDetection(threading.Thread):
         input_stream = 'video="DVI2USB 3.0 D2S342374"'
         os_name = platform.system()
         print('operation system: '+os_name)
+        global process
+
         if os_name == 'Windows':
-        if os_name == 'Windows':
-            newCommand = 'ffmpeg -f dshow -loglevel quiet -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="USB Capture HDMI+" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
-            global process
+            newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="DVI2USB 3.0 D2S342374" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
+
+            #newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="USB Capture HDMI+" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         if os_name == 'Linux':
 
-            global process
+
             newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i /dev/video0 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
         count = 1
@@ -322,27 +326,41 @@ class ffmpeg_freezeDetection(threading.Thread):
         print('hello')
         filename = f'{bufferPath}/frame-{framecount}.jpg'
         frame = cv2.imread(filename)
-        errorframe = cv2.imread('C:/Users/ami/OneDrive/Skrivebord/EngineeringProject/Flexible_Systeminterface/static/placeholder_images/unsupported_frame.jpg')
+        errorframe = cv2.imread('static/placeholder_images/unsupported_frame.jpg')
         prevdiff = 0
+
+        gray1 = cv2.cvtColor(errorframe, cv2.COLOR_BGR2GRAY)
+
+        hash1 = imagehash.dhash(Image.fromarray(gray1))
+
         while not self._stop_event.is_set():
             print('hi')
             dir = os.listdir(bufferPath)
             print(len(dir))
             filename = dir[-1]
-            print(f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg')
+            framepath = f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg'
+            print(framepath)
             prev = frame.copy()
-            frame = cv2.imread(f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg')
+            gray3 = cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY)
+            hash3 = imagehash.dhash(Image.fromarray(gray3))
+
+            frame = cv2.imread(framepath)
             #print('still error image'+str(np.sum(np.abs(errorframe[50:,:]-frame[50:,:]))))
-
-            while np.sum(np.abs(errorframe[50:,:]-frame[50:,:])) == 0:
-
-                print('still error image'+str(np.sum(np.abs(errorframe[50:,:]-frame[50:,:]))))
+            gray2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            hash2 = imagehash.dhash(Image.fromarray(gray2))
+            print(hash1 - hash2)
+            while (hash1 - hash2) == 0:
+                print('still error image '+str(np.sum(np.abs(errorframe[50:,:]-frame[50:,:]))))
                 dir = os.listdir(bufferPath)
                 filename = dir[-1]
-                print(f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg')
-                prev = frame.copy()
-                frame = cv2.imread(f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg')
-            diff = np.sum(np.abs(prev[50:,:]-frame[50:,:])) #calculate difference between previous and current frame
+                framepath = f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg'
+                frame = cv2.imread(framepath)
+                gray2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                hash2 = imagehash.dhash(Image.fromarray(gray2))
+
+
+            diff = np.sum(np.abs(prev[50:-100,:]-frame[50:-100,:])) #calculate difference between previous and current frame
+            #diff = hash3-hash2
             print('the difference is ',diff)
 
             #print(success,count,np.sum(np.abs(prev-frame))) # prints output
