@@ -112,12 +112,17 @@ function createCanvas(place){
 
 
 function draw_images(){
-  var capCan = document.getElementById('imgCanvas')
-  var draw = document.getElementById('canvas_draw');
-  var draw_ctx = draw.getContext('2d');
-  var ctx = capCan.getContext('2d')
-  draw_ctx.drawImage(aImg,0,0,draw.width,draw.height);
-  ctx.drawImage(bgImg,0,0,capCan.width,capCan.height);
+  if(img_plc[1] != 0){
+    var capCan = document.getElementById('imgCanvas')
+    var ctx = capCan.getContext('2d')
+    ctx.drawImage(bgImg,0,0,capCan.width,capCan.height);
+
+  }
+  if(an_plc[1] != 0){
+    var draw = document.getElementById('canvas_draw');
+    var draw_ctx = draw.getContext('2d');
+    draw_ctx.drawImage(aImg,0,0,draw.width,draw.height);
+  }
 }
 
 function draw_frozen_image(msg){

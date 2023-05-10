@@ -12,29 +12,25 @@
     btnMode = {{btnMode|tojson}};
     freezeMode = {{fMode|tojson}};
     imgBool = {{img_bool|tojson}};
+    img_index = {{img_index|tojson}};
     descBool = {{desc_bool|tojson}};
+    desc_index = {{desc_index|tojson}};
     resBool = {{res_bool|tojson}};
     resIndex = {{res_index|tojson}};
     img_plc = ['Captured Image',{{img_plc|tojson}}];
-    an_plc =['Analyzed Image',{{an_plc|tojson}}];
+    an_plc =['Analyzed Image',{{img_plc|tojson}}];
     res_plc = {{res_plc|tojson}};
     desc_plc ={{desc_plc|tojson}};
     pln_plc = {{plane_plc|tojson}};
+    labels_index = {{lab_index|tojson}}
     const bgImg = new Image(); // Create new img element
     const aImg = new Image();
     const planesImg = new Image();
-    bgImg.src = "static/placeholder_images/background_placeholder.png";
+    bgImg.src = "static/placeholder_images/background_image_captured.png";
     aImg.src = "static/placeholder_images/background_placeholder_analysis.png"
     planesImg.src = "static/placeholder_images/standardplanes.png";
     var socket = io();
-    socket.on('nextimg', function(msg){
-      console.log('recieved: '+msg.value);
-      draw_frozen_image(msg);
-    })
 
-    function disconnect(){
-      socket.disconnect();
-    }
   </script>
 
 </head>
@@ -44,7 +40,7 @@
 
       <div class="row mt-2">
 
-        <div class="col w-50 p-3"  id="sqr1">
+        <div class="col w-50  p-3"  id="sqr1">
 
         </div>
 

@@ -22,8 +22,8 @@ def make_dirs(myp):
     stamp = str(time.asctime( time.localtime(timer)))
     stamp = stamp.replace(' ', '_').replace(':','_')
 
-    dataPath = 'static'+os.sep+'Data'+os.sep+stamp
-    absfolder = myp+dataPath
+    dataPath = 'Data'+os.sep+stamp
+    absfolder = myp+os.sep+dataPath
     bufferPath = dataPath+os.sep+'buffer'
     bufferProcessed = dataPath+os.sep+'Processed_buffer'
     capImgPath = dataPath+os.sep+'Client_Image_Captured'
@@ -57,4 +57,4 @@ def save_from_dataUrl(data,path):
         currImg = path+os.sep+str(count)+'.jpg'
     with open(currImg, 'w+b') as fd:
         fd.write(binary_data)
-    return currImg    
+    return currImg

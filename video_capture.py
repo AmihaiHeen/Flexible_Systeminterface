@@ -2,7 +2,6 @@
 import cv2
 import os
 import time
-import serial
 import numpy as np
 import uuid
 import shutil
@@ -16,7 +15,10 @@ import convenientfunctions as cnv #imports con
 import image_save as save #imports image_save.py
 import imagehash
 from PIL import Image
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from io import BytesIO
 capture_mode = 1
 
 #capture_Frames funciton to read frames from specified source
@@ -31,7 +33,7 @@ def capture_Frames():
     input: None
     output: byte frames
     '''
-    camera = cv2.VideoCapture(capture_mode) #capture images from the specified camera
+    camera = cv2.VideoCapture(0) #capture images from the specified camera
     while True: #while loop, runs while in template_1
         success, frame = camera.read()  # read the camera frame
         if not success: #if no image is read, breaks the while loop
@@ -110,15 +112,29 @@ def still_frozen(prevdiff, currdiff): #takes differences as argument
     else: #if the image is frozen no more
         return False #return false and a new image can be captured
 
-def singleprocess(frame,path,count):
+def singleprocess(frame,path,count,fullPath):
+    img_index,lab_index,res_index,desc_index = cnv.getOutputIndecies()
+
     fnc = cnv.get_function()
-    resList = fnc(frame)
-    cv2.imwrite(path+os.sep+'frame-'+str(count)+'.jpg',resList[0])
+
+    resList = fnc(fullPath)
+
+    print('this is the resultlist index 0: ',resList[img_index])
+    #cv2.imwrite(path+os.sep+'frame-'+str(count)+'.jpg',resList[0])
+    #resList[img_index] = cv2.resize(resList[img_index],(640,480))
+    fig, ax = plt.subplots()
+    ax.imshow(resList[img_index],cmap ='gray')
+    ax.axis('off')
+    ax.set_frame_on(False)
+    output_file = path+os.sep+'frame-'+str(count)+'.jpg'
+    fig.savefig(output_file,format='jpg',bbox_inches='tight',pad_inches = 0)
+    with open(output_file,'rb') as r:
+        jpg_as_text = base64.b64encode(r.read()).decode()
+    #retval, buffer = cv2.imencode('.jpg', resList[0])
+    #im_byte= buffer.tobytes()
+    #jpg_as_text = base64.b64encode(im_byte).decode()
     resList = list(resList)
-    retval, buffer = cv2.imencode('.jpg', resList[0])
-    im_byte= buffer.tobytes()
-    jpg_as_text = base64.b64encode(im_byte).decode()
-    resList[0] = jpg_as_text
+    resList[img_index] = jpg_as_text
     return resList
 
 
@@ -262,9 +278,6 @@ class BCAnalysis(threading.Thread):
     def run(self):
         stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
         fps, resolution = cnv.getImgCapCon()
-
-        ffmpeg_path = 'ffmpeg'
-
         input_stream = 'video="DVI2USB 3.0 D2S342374"'
         os_name = platform.system()
         print('operation system: '+os_name)
@@ -301,25 +314,22 @@ class ffmpeg_freezeDetection(threading.Thread):
         self._stop_event = threading.Event()
     def run(self):
         stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
-        fps, resolution = cnv.getImgCapCon()
+        fps, resolution,device_name = cnv.getImgCapCon()
 
-        ffmpeg_path = 'ffmpeg'
-
-        input_stream = 'video="DVI2USB 3.0 D2S342374"'
         os_name = platform.system()
         print('operation system: '+os_name)
+
         global process
 
         if os_name == 'Windows':
-            newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="DVI2USB 3.0 D2S342374" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
+            newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
 
             #newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="USB Capture HDMI+" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         if os_name == 'Linux':
-
-
             newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i /dev/video0 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
+
         count = 1
         framecount = 1
         time.sleep(2)
@@ -349,6 +359,7 @@ class ffmpeg_freezeDetection(threading.Thread):
             gray2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             hash2 = imagehash.dhash(Image.fromarray(gray2))
             print(hash1 - hash2)
+
             while (hash1 - hash2) == 0:
                 print('still error image '+str(np.sum(np.abs(errorframe[50:,:]-frame[50:,:]))))
                 dir = os.listdir(bufferPath)
@@ -362,16 +373,19 @@ class ffmpeg_freezeDetection(threading.Thread):
             diff = np.sum(np.abs(prev[50:-100,:]-frame[50:-100,:])) #calculate difference between previous and current frame
             #diff = hash3-hash2
             print('the difference is ',diff)
-
             #print(success,count,np.sum(np.abs(prev-frame))) # prints output
             if not (still_frozen(prevdiff, diff)): #checks if the image is still froxen
                 if (diff == 0): # checks if the different is 0 and the image is frozen
                     path = capImgPath+os.sep+str(count)+'.jpg' #initialize the path for image to be saved
                     cv2.imwrite(path, frame) #saves the frozen image to the specified path
+                    print('this is the captured frame',frame)
                     print('sending works!!!') #print sending works
                     self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
                     proFrame = frame.copy()
-                    resList = singleprocess(proFrame,clientProcessed,count)
+                    testPath = 'static/xray_testImages/COVID-998.png'
+                    resList = singleprocess(proFrame,clientProcessed,count, testPath)
+                    for i in resList:
+                        print('type',type(i))
                     self.socketio.emit('output',{'res':resList[:]})
 
                     #imgPro.join()

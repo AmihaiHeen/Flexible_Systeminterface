@@ -1,3 +1,4 @@
+
 import os
 import sys
 from os.path import exists
@@ -33,7 +34,7 @@ que = Queue()
 def beginning():
     #freezeThread = threading.Thread(target=vc.freeze_image_detection)
     #freezeThread.start()
-    cnv.getConfigReturns()
+    #cnv.getConfigReturns()
     print()
     return render_template('index.html')
 
@@ -42,7 +43,7 @@ def template_1():
     path = ''
 
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-    fps, resolution = cnv.getImgCapCon()
+    fps, resolution,device_name = cnv.getImgCapCon()
 
     save.make_dirs(myp)
     return render_template('template_1.html', path = path, fps = fps)
@@ -60,7 +61,7 @@ def template_2():
 def template_3():
 
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-    fps, resolution = cnv.getImgCapCon()
+    fps, resolution, device_name = cnv.getImgCapCon()
 
     '''
     save.make_dirs(myp)
@@ -79,11 +80,13 @@ def template_3():
 @app.route('/template_4', methods=['GET', 'POST'])
 def template_4():
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-    fps, resolution = cnv.getImgCapCon()
+    fps, resolution,device_name = cnv.getImgCapCon()
+    img_index,lab_index,res_index,desc_index = cnv.getOutputIndecies()
+    cap_img,an_img,res_plc,desc_plc,plane_plc = cnv.getConfigInterface()
+    image_bool,desc_bool,res_bool,lab_bool = cnv.getConfigReturns()
     save.make_dirs(myp)
     cap = cv2.VideoCapture(1)
-    image_bool,image_index,desc_bool,desc_index,res_bool,res_amount,res_index= cnv.getConfigReturns()
-    cap_img,an_img,res_plc,desc_plc,plane_plc = cnv.getConfigInterface()
+
     print(res_index)
     if backgroundMode:
         global b
@@ -102,26 +105,24 @@ def template_4():
 @app.route('/template_5', methods=['GET', 'POST'])
 def template_5():
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-    fps, resolution = cnv.getImgCapCon()
+    fps, resolution, device_name = cnv.getImgCapCon()
     save.make_dirs(myp)
-    cap = cv2.VideoCapture(1)
-    image_bool,image_index,desc_bool,desc_index,res_bool,res_amount,res_index= cnv.getConfigReturns()
+    cap = cv2.VideoCapture(0)
+    image_bool,desc_bool,res_bool,lab_bool = cnv.getConfigReturns()
     cap_img,an_img,res_plc,desc_plc,plane_plc = cnv.getConfigInterface()
-    print(res_index)
-    if freezeMode:
-        global f
+
+    img_index,lab_index,res_index,desc_index = cnv.getOutputIndecies()
+    global f
+    print('description index: ',desc_index)
+    if freezeMode and backgroundMode:
         #f = vc.freezeDetection(socketio,cap)
         f = vc.ffmpeg_freezeDetection(socketio)
-
         f.start()
-    '''
-    if backgroundMode:
-        global b
-        #b = vc.BackgroundCapture(fps,cap,que)
-        b = vc.BCAnalysis()
-        b.start()
-    '''
-    return render_template('template_5.html', btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,desc_bool = desc_bool,res_bool = res_bool, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc)
+    if freezeMode and not backgroundMode:
+        print('gogogo')
+        f = vc.freezeDetection(socketio,cap)
+        f.start()
+    return render_template('template_5.html',btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,img_index = img_index,desc_bool = desc_bool,desc_index = desc_index,res_bool = res_bool,lab_bool= lab_bool,lab_index = lab_index, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc)
 
 @app.route('/buffer_page', methods=['GET','POST'])
 def buffer_page():

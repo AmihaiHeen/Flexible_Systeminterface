@@ -4,7 +4,9 @@ var sqr3 = document.getElementById('sqr3')
 var sqr4 = document.getElementById('sqr4')
 
 window.onload = function(){
-
+  createCardNav(img_plc);
+  createCanvas(img_plc);
+  createCanvas(an_plc);
   if(res_plc==desc_plc){
     b = createRow(desc_plc)
     createRes(res_plc,b);
@@ -20,9 +22,7 @@ window.onload = function(){
   //createButton();
 
   //createRes(res_plc);
-  createCardNav(img_plc)
-  createCanvas(img_plc);
-  createCanvas(an_plc);
+
   draw_images();
 
 
@@ -36,17 +36,27 @@ socket.on('output', function(output){
   console.log(output.res)
   var outR = output.res;
   var newImg = new Image();
-  newImg.src = "data:image/jpeg;base64,"+outR[0];
+  newImg.src = "data:image/jpeg;base64,"+outR[img_index];
   var canvas_processed = document.getElementById('canvas_draw');
   var ctx_square = canvas_processed.getContext('2d');
   setTimeout(function() {
     ctx_square.drawImage(newImg,0,0,canvas_processed.width, canvas_processed.height);
   }, 100);
-  createResList(outR[1])
-  createDescText(outR[2])
+  createResList(outR[labels_index],outR[resIndex])
+  createDescText(outR[desc_index])
   document.getElementById('analyzedLink').click()
   //var returnArr = output.value;
 })
+socket.on('nextimg', function(msg){
+  console.log('recieved: '+msg.value);
+  draw_frozen_image(msg);
+  document.getElementById('imageLink').click()
+
+})
+
+function disconnect(){
+  socket.disconnect();
+}
 window.onunload = function(){
   disconnect();
 }
@@ -75,6 +85,7 @@ li1.classList.add('nav-item','w-50');
 // create first anchor with class "nav-link active"
 const a1 = document.createElement('a');
 a1.classList.add('nav-link', 'active','text-light');
+a1.setAttribute('id','imageLink')
 a1.setAttribute('href', '#capImageDiv');
 a1.setAttribute('role', 'tab');
 a1.setAttribute('aria-controls', 'capImageDiv');
@@ -160,24 +171,49 @@ function createButton(){
 
 }
 function createDescText(text){
+  var desc = document.getElementById('desc_div');
+  desc.innerHTML =''
   var descP = document.createElement('p');
   descP.setAttribute('class','text-justify p-2');
   var pTxt = document.createTextNode(text);
   descP.appendChild(pTxt);
-  document.getElementById('desc_div').appendChild(descP)
+  desc.appendChild(descP)
 
 }
 
-function createResList(resIndex){
+function createResList(labels,results){
   var res_list = document.getElementById('res_list');
   res_list.innerHTML =''
-  for(i=0;i<resIndex.length;i++){
+  for(i=0;i<results.length;i++){
     //console.log(resIndex[i]);
     var count = i;
     var rLi = document.createElement('li')
     rLi.setAttribute('class','list-group-item d-flex justify-content-between bg-secondary')
-    var rLiTxt = document.createTextNode('index '+count+' with result: '+resIndex[i]);
+    var colorDiv = document.createElement('div')
+    if(typeof(results[i]) == 'string'){
+      colorDiv.classList.add('foo')
+      var colorTxt = document.createTextNode( ' '+results[i]);
+    }
+    else{
+
+      if(results[i]>0.8){
+        colorDiv.classList.add('foo','bg-success','border')
+
+      }
+      else if(results[i] < 0.8 && results[i] > 0.5){
+        colorDiv.classList.add('foo','bg-warning','border')
+      }
+      else{
+        colorDiv.classList.add('foo','bg-danger')
+      }
+      var colorTxt = document.createTextNode( ' '+results[i].toFixed(2));
+    }
+
+    var rLiTxt = document.createTextNode(labels[i]+' ');
+    console.log(typeof(results[i]))
+    colorDiv.appendChild(colorTxt)
     rLi.appendChild(rLiTxt);
+    rLi.appendChild(colorDiv);
     res_list.appendChild(rLi);
   }
 }
@@ -186,7 +222,7 @@ function createCanvas(place){
     console.log(place[1])
     var cCanvas = document.createElement('canvas');
     if(place[0] == 'Captured Image'){
-      var nav_tab = document.getElementById('capImageDiv')
+      var nav_tab = document.getElementById('capImageDiv');
       cCanvas.setAttribute('id', 'imgCanvas');
     }
     else{
@@ -194,8 +230,8 @@ function createCanvas(place){
 
       cCanvas.setAttribute('id', 'canvas_draw');
     }
-    console.log('col'+place[1]+'');
-    cCanvas.setAttribute('class','w-100')
+    //console.log('col'+place[1]+'');
+    cCanvas.classList.add('w-100','rounded')
     h = window.innerHeight/2;
     w = window.innerWidth/2
     cCanvas.setAttribute('height',''+480+'px');
@@ -231,8 +267,13 @@ function createDesc(plc,b){
   if(descBool){
     var descbox = document.createElement('div');
     descbox.setAttribute('id','desc_box');
-    descbox.setAttribute('class', 'accordition col-6 col-sm-6  w-50 ');
+    if(res_plc == desc_plc){
+      descbox.setAttribute('class', 'accordition col-6 col-sm-6  w-50 ');
+    }
+    else{
+      descbox.setAttribute('class', 'accordition col');
 
+    }
     var descCard = document.createElement('div');
     descCard.setAttribute('class', 'card bg-secondary');
 
@@ -287,8 +328,12 @@ function createRes(plc,b){
   if(resBool){
     var resbox = document.createElement('div');
     resbox.setAttribute('id','res_box');
-    resbox.setAttribute('class', 'accordition col-6 col-sm-6 w-50');
-
+    if(res_plc == desc_plc){
+      resbox.setAttribute('class', 'accordition col-6 col-sm-6 w-50');
+    }
+    else{
+      resbox.setAttribute('class', 'accordition col');
+    }
     var resCard = document.createElement('div');
     resCard.setAttribute('class', ' card bg-secondary');
     //resCard.setAttribute('style','max-width:20rem;')

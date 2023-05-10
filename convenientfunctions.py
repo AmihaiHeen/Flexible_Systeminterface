@@ -1,7 +1,7 @@
 import os
 import sys
 import toml
-import importlib
+import importlib.util
 
 #Path to script
 myp = os.path.realpath(os.path.dirname(__file__))
@@ -34,9 +34,10 @@ def getConfig():
 def getImgCapCon():
     config = toml.load('config.toml')
 
-    fps = config['image_capture']['fps']['fps']
-    resolution = config['image_capture']['resolution']['resolution']
-    return fps,resolution
+    fps = config['image_capture']['fps']
+    resolution = config['image_capture']['resolution']
+    device_name = config['image_capture']['device_name']
+    return fps,resolution,device_name
 def getConfigInterface():
     config = toml.load('config.toml')
     images = config['interface']['images']
@@ -54,29 +55,30 @@ def getConfigInterface():
 def getConfigReturns():
     config = toml.load('config.toml')
     image_bool = config['returns']['image']['image_bool']
-    if image_bool:
-        image_index = config['returns']['image']['return_index']
-    else:
-        image_index = ""
+
     desc_bool = config['returns']['description']['description_bool']
-    if desc_bool:
-        desc_index = config['returns']['description']['return_index']
-    else:
-        desc_index = ""
+
     res_bool = config['returns']['results']['result_bool']
-    if res_bool:
-        res_amount = config['returns']['results']['return_amount']
-        res_index = config['returns']['results']['result_index']
-    else:
-        res_amount = ""
-        res_index = ""
-    return image_bool,image_index,desc_bool,desc_index,res_bool,res_amount,res_index
+
+    lab_bool = config['returns']['labels']['labels_bool']
+
+    return image_bool,desc_bool,res_bool,lab_bool
 
 def get_function():
     config = toml.load('config.toml')
     module_name = config['model']['module']
     funtion_name = config['model']['function']
-    module = importlib.import_module(module_name)
+    module_spec = importlib.util.spec_from_file_location(module_name,module_name+'.py')
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    #module = importlib.import_module(module_name)
     function = getattr(module,funtion_name)
     print('getting model')
     return function
+def getOutputIndecies():
+    config = toml.load('config.toml')
+    img_index = config['returns']['output']['image_index']
+    labels_index = config['returns']['output']['labels_index']
+    result_index = config['returns']['output']['result_index']
+    desc_index = config['returns']['output']['description_index']
+    return img_index,labels_index,result_index,desc_index
