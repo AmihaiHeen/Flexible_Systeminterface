@@ -9,4 +9,8 @@
 *Data/*
 *static/placeholder_images/test_jpg*
 *static/placeholder_images/testimages*
+<<<<<<< Updated upstream
+=======
+*multithreads.py*
+>>>>>>> Stashed changes
 *flask_monitoringdashboard.db*

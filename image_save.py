@@ -22,7 +22,7 @@ def make_dirs(myp):
     stamp = str(time.asctime( time.localtime(timer)))
     stamp = stamp.replace(' ', '_').replace(':','_')
 
-    dataPath = 'Data'+os.sep+stamp
+    dataPath = 'static'+os.sep+'Data'+os.sep+stamp
     absfolder = myp+os.sep+dataPath
     bufferPath = dataPath+os.sep+'buffer'
     bufferProcessed = dataPath+os.sep+'Processed_buffer'

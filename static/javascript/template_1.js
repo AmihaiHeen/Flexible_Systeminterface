@@ -35,21 +35,26 @@ window.onload = function(){
     var res = document.getElementById("res_box");
     var desc = document.getElementById("desc_box");
     var exp = document.getElementById("expert_box");
+
     if(checkbox.checked){
       res.style.display = "none";
       desc.style.display = "none";
       exp.style.display = "block";
+      planesCan.style.display = 'none'
     }
     else{
       res.style.display = "block";
       desc.style.display = "block";
       exp.style.display = "none";
+      planesCan.style.display = 'block'
+
 
     }
   })
   var socketCan = document.getElementById('socketCanvas');
   var context = socketCan.getContext('2d')
   console.log(FPS)
+  random_percantage()
 /*  setInterval(() => {
   socketCan.width = feed.naturalWidth;
   socketCan.height = feed.naturalHeight;
@@ -132,10 +137,10 @@ function capture_video(){
 function random_percantage(outArr){
   var colors = ['#F75151','#a0e77d','yellow'];
   var labels = ['Heart','Head','Abdomen','Left foot','Right foot', 'Right hand', 'Left hand']
-  var head_detected = outArr[0];
-  var abdominal_planes = outArr[1];
-  var somethingsomething = outArr[2];
-  var something_detected = outArr[2];
+  var head_detected = Math.floor(Math.random() * 10);
+  var abdominal_planes = Math.floor(Math.random() * 10);
+  var somethingsomething = Math.floor(Math.random() * 10);
+  var something_detected =Math.floor(Math.random() * 10);
 
   document.getElementById('imgQ').style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
   document.getElementById("headD").value = head_detected;

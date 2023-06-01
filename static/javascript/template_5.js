@@ -2,7 +2,7 @@ var sqr1 = document.getElementById('sqr1')
 var sqr2 = document.getElementById('sqr2')
 var sqr3 = document.getElementById('sqr3')
 var sqr4 = document.getElementById('sqr4')
-
+var clickCount = 0;
 window.onload = function(){
   createCardNav(img_plc);
   createCanvas(img_plc);
@@ -18,6 +18,9 @@ window.onload = function(){
 
     createRes(res_plc,a);
     createDesc(desc_plc,b);
+  }
+  if(btnMode){
+    createCapButton(btn_plc)
   }
   //createButton();
 
@@ -379,6 +382,16 @@ function createRes(plc,b){
     document.getElementById(b).appendChild(resbox);
   }
 }
+function createCapButton(btn_plc){
+  var btn = document.createElement('button');
+  btn.classList.add('btn','btn-secondary');
+  btn.setAttribute('type','button');
+  btn.setAttribute('onclick','capImg()');
+  var btn_text = document.createTextNode('Capture image');
+  btn.appendChild(btn_text);
+  document.getElementById('sqr'+btn_plc).appendChild(btn)
+}
+
 
 function show_hide(b) {
   if(b==0){
@@ -403,8 +416,16 @@ function show_hide(b) {
     y.innerHTML = "Show "+z+" <i class='fa-solid fa-plus'></i>"
   }
 }
+<<<<<<< Updated upstream
 
 
+=======
+function capImg(){
+  socket.emit('Capimg')
+  clickCount++;
+  console.log('click number: '+clickCount);
+}
+>>>>>>> Stashed changes
 function get_img(){
   var feed = new Image();
   var imageCan = document.getElementById('imgCanvas')

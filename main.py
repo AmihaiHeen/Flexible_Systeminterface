@@ -121,7 +121,10 @@ def template_5():
     if buttonMode:
         b = vc.BCAnalysis()
         b.start()
+<<<<<<< Updated upstream
         
+=======
+>>>>>>> Stashed changes
     global clickCount
     clickCount = 0
     return render_template('template_5.html',btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,img_index = img_index,desc_bool = desc_bool,desc_index = desc_index,res_bool = res_bool,lab_bool= lab_bool,lab_index = lab_index, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc,btn_plc = btn_plc)
