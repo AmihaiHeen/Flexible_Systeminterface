@@ -2,15 +2,14 @@
 *static/Data/*
 *metadata.txt*
 *notes.md*
-*static/Model/*
+*static/Model/COVID_19_detection_with_Chest_X_Ray_using_PyTorch_master*
+*static/Model/SonoNet_PyTorch-master*
+
 *quick.py*
 *jpgToMha.py*
 *myimage.jpg*
 *Data/*
 *static/placeholder_images/test_jpg*
 *static/placeholder_images/testimages*
-<<<<<<< Updated upstream
-=======
 *multithreads.py*
->>>>>>> Stashed changes
 *flask_monitoringdashboard.db*

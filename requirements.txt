@@ -63,8 +63,6 @@ jsonpointer==2.3
 keras==2.12.0
 keyboard==0.13.5
 kiwisolver==1.4.4
-lasagna==0.0.1
-Lasagne @ https://github.com/Lasagne/Lasagne/archive/master.zip#sha256=2336c20ce9ec9e2de613fc6124778395f16de9e6f263335752177369cd03df17
 libclang==16.0.0
 libspn==0.1.3
 libusb==1.0.26b5
