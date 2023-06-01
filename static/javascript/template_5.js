@@ -404,6 +404,7 @@ function show_hide(b) {
   }
 }
 
+
 function get_img(){
   var feed = new Image();
   var imageCan = document.getElementById('imgCanvas')
