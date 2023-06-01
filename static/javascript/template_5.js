@@ -416,16 +416,12 @@ function show_hide(b) {
     y.innerHTML = "Show "+z+" <i class='fa-solid fa-plus'></i>"
   }
 }
-<<<<<<< Updated upstream
 
-
-=======
 function capImg(){
   socket.emit('Capimg')
   clickCount++;
   console.log('click number: '+clickCount);
 }
->>>>>>> Stashed changes
 function get_img(){
   var feed = new Image();
   var imageCan = document.getElementById('imgCanvas')

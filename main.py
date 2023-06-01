@@ -2,12 +2,10 @@
 import os
 import sys
 from os.path import exists
-import uuid
 import shutil
 import threading
 from binascii import a2b_base64
 import base64
-from multiprocess import Process, Queue, Lock
 from array import *
 #from statistics import mean
 from PIL import Image
@@ -19,16 +17,12 @@ import convenientfunctions as cnv
 import image_save as save
 from flask import Flask, render_template,Response, request,redirect, send_from_directory, jsonify
 from flask_socketio import SocketIO
-import flask_monitoringdashboard as dashboard
 
 
 app = Flask(__name__)
-dashboard.bind(app)
 
-thread_lock = Lock()
 socketio = SocketIO(app, cors_allowed_origins='*')
 myp = os.path.realpath(os.path.dirname(__file__))
-que = Queue()
 
 
 @app.route('/', methods=['GET','POST'])
@@ -121,10 +115,7 @@ def template_5():
     if buttonMode:
         b = vc.BCAnalysis()
         b.start()
-<<<<<<< Updated upstream
-        
-=======
->>>>>>> Stashed changes
+
     global clickCount
     clickCount = 0
     return render_template('template_5.html',btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,img_index = img_index,desc_bool = desc_bool,desc_index = desc_index,res_bool = res_bool,lab_bool= lab_bool,lab_index = lab_index, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc,btn_plc = btn_plc)
@@ -138,14 +129,6 @@ def buffer_page():
         bufferlist.append(bufferProcessed+os.sep+i)
     return render_template('buffer_page.html', bufferlist = bufferlist)
 
-
-@socketio.on('freez')
-def handlemessage():
-        global thread
-        thread = None
-        with thread_lock:
-            if thread is None:
-                thread = socketio.start_background_task(vc.analyze_que,que)
 
 
 @socketio.on('disconnect')
