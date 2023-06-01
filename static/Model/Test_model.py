@@ -10,7 +10,6 @@ from binascii import a2b_base64
 import base64
 import random
 import string
-from multiprocess import Process, Queue, Lock
 from array import *
 #from statistics import mean
 from threading import Lock
@@ -19,12 +18,12 @@ import numpy as np
 import video_capture as vc
 import convenientfunctions as cnv
 import image_save as save
-from flask import Flask, render_template,Response, request,redirect, send_from_directory, jsonify
-from flask_socketio import SocketIO
+
 
 
 def modelOut(image):
-    resArr = [random.randint(0,10),random.randint(0,10),random.randint(0,10)]
+    labellist = ['label','conf','diff']
+    reslist = [random.randint(0,10),random.randint(0,10),random.randint(0,10)]
     # Center coordinates
     center_coordinates = (120*random.randint(1,5), 50*random.randint(1,5))
     # Radius of circle
@@ -39,4 +38,4 @@ def modelOut(image):
     letters = string.ascii_lowercase
     randS = ''.join(random.choice(letters) for i in range(100))
 
-    return image,resArr,randS
+    return image,labellist,reslist,randS
