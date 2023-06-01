@@ -2,8 +2,6 @@
 import os
 import sys
 from os.path import exists
-import time
-import json
 import uuid
 import shutil
 import threading
@@ -12,9 +10,7 @@ import base64
 from multiprocess import Process, Queue, Lock
 from array import *
 #from statistics import mean
-import imagehash
 from PIL import Image
-
 from threading import Lock
 import cv2
 import numpy as np
@@ -23,19 +19,22 @@ import convenientfunctions as cnv
 import image_save as save
 from flask import Flask, render_template,Response, request,redirect, send_from_directory, jsonify
 from flask_socketio import SocketIO
+import flask_monitoringdashboard as dashboard
+
 
 app = Flask(__name__)
+dashboard.bind(app)
+
 thread_lock = Lock()
 socketio = SocketIO(app, cors_allowed_origins='*')
 myp = os.path.realpath(os.path.dirname(__file__))
 que = Queue()
 
+
 @app.route('/', methods=['GET','POST'])
-def beginning():
-    #freezeThread = threading.Thread(target=vc.freeze_image_detection)
-    #freezeThread.start()
-    #cnv.getConfigReturns()
-    print()
+def index():
+
+
     return render_template('index.html')
 
 @app.route('/template_1', methods=['GET','POST'])
@@ -43,7 +42,7 @@ def template_1():
     path = ''
 
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-    fps, resolution,device_name = cnv.getImgCapCon()
+    fps, resolution,device_name,image_format = cnv.getImgCapCon()
 
     save.make_dirs(myp)
     return render_template('template_1.html', path = path, fps = fps)
@@ -61,7 +60,7 @@ def template_2():
 def template_3():
 
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-    fps, resolution, device_name = cnv.getImgCapCon()
+    fps, resolution, device_name,image_format = cnv.getImgCapCon()
 
     '''
     save.make_dirs(myp)
@@ -80,9 +79,9 @@ def template_3():
 @app.route('/template_4', methods=['GET', 'POST'])
 def template_4():
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-    fps, resolution,device_name = cnv.getImgCapCon()
+    fps, resolution,device_name,image_format = cnv.getImgCapCon()
     img_index,lab_index,res_index,desc_index = cnv.getOutputIndecies()
-    cap_img,an_img,res_plc,desc_plc,plane_plc = cnv.getConfigInterface()
+    cap_img,an_img,res_plc,desc_plc,plane_plc,btn_plc = cnv.getConfigInterface()
     image_bool,desc_bool,res_bool,lab_bool = cnv.getConfigReturns()
     save.make_dirs(myp)
     cap = cv2.VideoCapture(1)
@@ -104,25 +103,28 @@ def template_4():
 
 @app.route('/template_5', methods=['GET', 'POST'])
 def template_5():
+    save.make_dirs(myp) #creates necesarry libraries
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-    fps, resolution, device_name = cnv.getImgCapCon()
-    save.make_dirs(myp)
-    cap = cv2.VideoCapture(0)
+    fps, resolution, device_name, image_format = cnv.getImgCapCon()
     image_bool,desc_bool,res_bool,lab_bool = cnv.getConfigReturns()
-    cap_img,an_img,res_plc,desc_plc,plane_plc = cnv.getConfigInterface()
-
+    cap_img,an_img,res_plc,desc_plc,plane_plc,btn_plc = cnv.getConfigInterface()
     img_index,lab_index,res_index,desc_index = cnv.getOutputIndecies()
     global f
-    print('description index: ',desc_index)
     if freezeMode and backgroundMode:
-        #f = vc.freezeDetection(socketio,cap)
         f = vc.ffmpeg_freezeDetection(socketio)
         f.start()
     if freezeMode and not backgroundMode:
-        print('gogogo')
+        cap = cv2.VideoCapture(0)
         f = vc.freezeDetection(socketio,cap)
         f.start()
-    return render_template('template_5.html',btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,img_index = img_index,desc_bool = desc_bool,desc_index = desc_index,res_bool = res_bool,lab_bool= lab_bool,lab_index = lab_index, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc)
+    global b
+    if buttonMode:
+        b = vc.BCAnalysis()
+        b.start()
+        
+    global clickCount
+    clickCount = 0
+    return render_template('template_5.html',btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,img_index = img_index,desc_bool = desc_bool,desc_index = desc_index,res_bool = res_bool,lab_bool= lab_bool,lab_index = lab_index, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc,btn_plc = btn_plc)
 
 @app.route('/buffer_page', methods=['GET','POST'])
 def buffer_page():
@@ -152,8 +154,8 @@ def disconnect():
     if(freezeMode):
         f.stop()
         f.join()
-    #if(backgroundMode):
-    #    b.stop()
+    if(buttonMode):
+        b.stop()
     #    b.join()
 
 
@@ -161,25 +163,33 @@ def disconnect():
 def stop():
     f.stop()
     f.join()
+
+@socketio.on('Capimg')
+def btnCap():
+    stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
+    fps, resolution,device_name,image_format = cnv.getImgCapCon()
+    global clickCount
+    clickCount +=1
+    imgList = os.listdir(bufferPath)
+    length = len(imgList)-1
+    emit_path = f'{bufferPath}/frame-'+str(len(imgList)-1)+'.'+image_format
+    print('click number',clickCount)
+    socketio.emit('nextimg',{'value':emit_path})
+    frame = cv2.imread(bufferPath+os.sep+imgList[length])
+    count=1
+    save_path = capImgPath+os.sep+str(count)+'.'+image_format
+    while os.path.exists(save_path):
+        count+=1
+        save_path = capImgPath+os.sep+str(count)+'.'+image_format
+    cv2.imwrite(save_path,frame)
+    resList = vc.singleprocess(frame,clientProcessed,count,emit_path)
+    socketio.emit('output',{'res':resList[:]})
+
+
 @socketio.on('clientImage')
 def clientImg(clientImage):
     stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
     pa =save.save_from_dataUrl(clientImage,capImgPath)
-
-    #img = cv2.imread(pa)
-    #fnc = cnv.get_function()
-    #returnList = fnc(img)
-    #print(returnList[0])
-    #returnList = list(returnList)
-    #print(type(returnList[0]))
-    #retval, buffer = cv2.imencode('.jpg', returnList[0])
-    #im_byte= buffer.tobytes()
-    #jpg_as_text = base64.b64encode(im_byte).decode()
-    #print(jpg_as_text)
-    #returnList[0] = jpg_as_text
-
-    #socketio.emit('output',{'res':returnList[:]})
-
 
 
 @socketio.on('buffer_image')

@@ -119,7 +119,7 @@ def singleprocess(frame,path,count,fullPath):
 
     resList = fnc(fullPath)
 
-    print('this is the resultlist index 0: ',resList[img_index])
+    #print('this is the resultlist index 0: ',resList[img_index])
     #cv2.imwrite(path+os.sep+'frame-'+str(count)+'.jpg',resList[0])
     #resList[img_index] = cv2.resize(resList[img_index],(640,480))
     fig, ax = plt.subplots()
@@ -195,21 +195,21 @@ class freezeDetection(threading.Thread):
             success, frame = self.cap.read() #captures new frame
 
             diff = np.sum(np.abs(prev[50:,:]-frame[50:,:])) #calculate difference between previous and current frame
-            print(diff,prevdiff)
-            print(success,count,np.sum(np.abs(prev-frame))) # prints output
+            #print(diff,prevdiff)
+            #print(success,count,np.sum(np.abs(prev-frame))) # prints output
             if not (still_frozen(prevdiff, diff)): #checks if the image is still froxen
                 if (diff == 0): # checks if the different is 0 and the image is frozen
                     path = capImgPath+os.sep+str(count)+'.jpg' #initialize the path for image to be saved
                     cv2.imwrite(path, frame) #saves the frozen image to the specified path
-                    print('sending works!!!') #print sending works
+                    #print('sending works!!!') #print sending works
                     self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
                     proFrame = frame.copy()
                     resList = singleprocess(proFrame,clientProcessed,count)
                     self.socketio.emit('output',{'res':resList[:]})
 
                     #imgPro.join()
-                    print('this is the prev diff '+str(prevdiff))
-                    print('stopped')
+                    #print('this is the prev diff '+str(prevdiff))
+                    #print('stopped')
                     count+=1 # count is updated
                     self.socketio.sleep(0.5) #socket sleep timer
                     #print('blah')
@@ -277,32 +277,36 @@ class BCAnalysis(threading.Thread):
         super().__init__()
     def run(self):
         stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
-        fps, resolution = cnv.getImgCapCon()
+        fps, resolution,device_name,image_format = cnv.getImgCapCon()
         input_stream = 'video="DVI2USB 3.0 D2S342374"'
         os_name = platform.system()
-        print('operation system: '+os_name)
-        command = [ffmpeg_path,'-i',input_stream,'-f','image2', f'{bufferPath}/frame-%d.jpg']
-        newCommand = 'ffmpeg -f dshow -i video="USB Capture HDMI+" -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
-        print(command)
+        #print('operation system: '+os_name)
+        #command = [ffmpeg_path,'-i',input_stream,'-f','image2', f'{bufferPath}/frame-%d.jpg']
+        newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
+
+        #print(command)
         global process
+
         if os_name == 'Windows':
+            newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         if os_name == 'Linux':
-            process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True)
+            newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i '+device_name+' -video_size -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
+            process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
 
         framecount = 1
         time.sleep(2)
 
-        while True:
+        #while True:
 
-            filename = f'{bufferPath}/frame-{framecount}.jpg'
-            if not os.path.exists(filename):
-                break
-            frame = cv2.imread(filename)
-            resList = singleprocess(frame,bufferProcessed,framecount)
+        #    filename = f'{bufferPath}/frame-{framecount}.ima'
+        #    if not os.path.exists(filename):
+        #        break
+        #    frame = cv2.imread(filename)
+        #    resList = singleprocess(frame,bufferProcessed,framecount)
             #print('list of results'+str(resList))
-            framecount +=1
-            time.sleep(2)
+        #    framecount +=1
+        #    time.sleep(1/fps)
     def stop(self):
         global process
         process.send_signal(signal.CTRL_BREAK_EVENT)
@@ -312,29 +316,28 @@ class ffmpeg_freezeDetection(threading.Thread):
         super().__init__()
         self.socketio = socketio
         self._stop_event = threading.Event()
+        self.total_time = 0
     def run(self):
         stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
-        fps, resolution,device_name = cnv.getImgCapCon()
+        fps, resolution,device_name,image_format = cnv.getImgCapCon()
 
         os_name = platform.system()
         print('operation system: '+os_name)
-
+        test_list= os.listdir('static/placeholder_images/test_jpg')
         global process
 
         if os_name == 'Windows':
-            newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
-
-            #newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="USB Capture HDMI+" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
+            newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         if os_name == 'Linux':
-            newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i /dev/video0 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.jpg'
+            newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i '+device_name+' -video_size -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
 
         count = 1
         framecount = 1
-        time.sleep(2)
+        time.sleep(4)
         print('hello')
-        filename = f'{bufferPath}/frame-{framecount}.jpg'
+        filename = f'{bufferPath}/frame-{framecount}.'+image_format
         frame = cv2.imread(filename)
         errorframe = cv2.imread('static/placeholder_images/unsupported_frame.jpg')
         prevdiff = 0
@@ -344,21 +347,18 @@ class ffmpeg_freezeDetection(threading.Thread):
         hash1 = imagehash.dhash(Image.fromarray(gray1))
 
         while not self._stop_event.is_set():
-            print('hi')
+            #print('hi')
             dir = os.listdir(bufferPath)
-            print(len(dir))
+            #print(len(dir))
             filename = dir[-1]
-            framepath = f'{bufferPath}/frame-'+str(len(dir)-1)+'.jpg'
-            print(framepath)
+            framepath = f'{bufferPath}/frame-'+str(len(dir)-1)+'.'+image_format
+            #print(framepath)
             prev = frame.copy()
-            gray3 = cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY)
-            hash3 = imagehash.dhash(Image.fromarray(gray3))
-
             frame = cv2.imread(framepath)
             #print('still error image'+str(np.sum(np.abs(errorframe[50:,:]-frame[50:,:]))))
             gray2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             hash2 = imagehash.dhash(Image.fromarray(gray2))
-            print(hash1 - hash2)
+            #print(hash1 - hash2)
 
             while (hash1 - hash2) == 0:
                 print('still error image '+str(np.sum(np.abs(errorframe[50:,:]-frame[50:,:]))))
@@ -370,35 +370,38 @@ class ffmpeg_freezeDetection(threading.Thread):
                 hash2 = imagehash.dhash(Image.fromarray(gray2))
 
 
-            diff = np.sum(np.abs(prev[50:-100,:]-frame[50:-100,:])) #calculate difference between previous and current frame
+            diff = np.sum(np.abs(prev[50:-100,0:-100]-frame[50:-100,0:-100])) #calculate difference between previous and current frame
             #diff = hash3-hash2
-            print('the difference is ',diff)
+            #print('the difference is ',diff)
             #print(success,count,np.sum(np.abs(prev-frame))) # prints output
             if not (still_frozen(prevdiff, diff)): #checks if the image is still froxen
                 if (diff == 0): # checks if the different is 0 and the image is frozen
-                    path = capImgPath+os.sep+str(count)+'.jpg' #initialize the path for image to be saved
+                    start_time = time.time()
+                    path = capImgPath+os.sep+str(count)+'.'+image_format #initialize the path for image to be saved
                     cv2.imwrite(path, frame) #saves the frozen image to the specified path
-                    print('this is the captured frame',frame)
-                    print('sending works!!!') #print sending works
+                    #print('this is the captured frame',frame)
+                    #print('sending works!!!') #print sending works
                     self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
                     proFrame = frame.copy()
-                    testPath = 'static/xray_testImages/COVID-998.png'
-                    resList = singleprocess(proFrame,clientProcessed,count, testPath)
-                    for i in resList:
-                        print('type',type(i))
+                    testPath = 'static/placeholder_images/test_jpg'+os.sep+test_list[count]
+                    resList = singleprocess(proFrame,clientProcessed,count,testPath)
+                    #for i in resList:
+                        #print('type',type(i))
                     self.socketio.emit('output',{'res':resList[:]})
-
+                    end_time = time.time()
+                    self.total_time += end_time-start_time
                     #imgPro.join()
-                    print('this is the prev diff '+str(prevdiff))
-                    print('stopped')
+                    #print('this is the prev diff '+str(prevdiff))
+                    #print('stopped')
                     count+=1 # count is updated
                     self.socketio.sleep(0.5) #socket sleep timer
                     #print('blah')
                             #return path
                 prevdiff = diff #sets previous difference to new difference
-            time.sleep(1/fps) #half of nyquist limit
+            time.sleep(0.25) #half of nyquist limit
     def stop(self):
         self._stop_event.set()
+        print('total_time = ',self.total_time)
         global process
         if platform.system() == 'Windows':
        		process.send_signal(signal.CTRL_BREAK_EVENT)
