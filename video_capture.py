@@ -384,7 +384,7 @@ class ffmpeg_freezeDetection(threading.Thread):
                     self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
                     proFrame = frame.copy()
                     testPath = 'static/placeholder_images/test_jpg'+os.sep+test_list[count]
-                    resList = singleprocess(proFrame,clientProcessed,count,testPath)
+                    resList = singleprocess(proFrame,clientProcessed,count,path)
                     #for i in resList:
                         #print('type',type(i))
                     self.socketio.emit('output',{'res':resList[:]})
