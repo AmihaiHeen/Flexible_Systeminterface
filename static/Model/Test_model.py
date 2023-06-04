@@ -22,8 +22,9 @@ import image_save as save
 
 
 def modelOut(image):
+    image = cv2.imread(image)
     labellist = ['label','conf','diff']
-    reslist = [random.randint(0,10),random.randint(0,10),random.randint(0,10)]
+    resultlist = [random.randint(0,10),random.randint(0,10),random.randint(0,10)]
     # Center coordinates
     center_coordinates = (120*random.randint(1,5), 50*random.randint(1,5))
     # Radius of circle
@@ -36,6 +37,6 @@ def modelOut(image):
     # Draw a circle with blue line borders of thickness of 2 px
     image = cv2.circle(image, center_coordinates, radius, color, thickness)
     letters = string.ascii_lowercase
-    randS = ''.join(random.choice(letters) for i in range(100))
+    describingtext = ''.join(random.choice(letters) for i in range(100))
 
-    return image,labellist,reslist,randS
+    return labellist,describingtext,image,resultlist
