@@ -1,20 +1,21 @@
 [model]
-module = 'static/Model/SonoNet_PyTorch-master/test' # path to the model python script without .py
-function= 'runIt' #name of the function analyzing a single image
+#models are in the /static/Model folder
+module = '/Path/To/Model/Python/Script'# path to the model python script without .py
+function= 'Function_name' #name of the function analyzing a single image
 
 [image_capture]
 #bool for activating the desired capturing method
-image_capture_button = true
-image_capture_freeze = false
+image_capture_button = false
+image_capture_freeze = true
 image_capture_background = true
 #capturing setting, device_name varies depending on the operation system in use
 
 [capture_settings]
 #device_name= "Integrated Camera"
-device_name = "image device" #only necessary if using BackgroundCapture
+device_name = "DVI2USB 3.0 D2S342374" #only necessary if using BackgroundCapture
 resolution = [640,480] #changes the resolution of captured images
-image_format = 'jpg' #changes the format of the image captured
-background_capture_fps = 10 #only necessary if using BackgroundCapture
+image_format = 'png' #changes the format of the image captured
+background_capture_fps = 20 #only necessary if using BackgroundCapture
 
 [interface]
 #the interface is split in 4 different squares 2 rows an 2 columns
@@ -23,20 +24,20 @@ background_capture_fps = 10 #only necessary if using BackgroundCapture
 #[3][4]
 #pick where you want to place the different elements
 #If there are anything not needed or not gonna be visualized set value to 0
-  button_placement = 3 #only enable if image_capture_button == true
-  captured_image_placement = 1
-  analyzed_image_placement = 1
-  result_list_placement = 2
-  description_placement = 2
+  button_placement = 0 #only enabled if image_capture_button == true
+  captured_image_placement = 2
+  analyzed_image_placement = 2
+  result_list_placement = 3
+  description_placement = 1
   standardplanes_placement = 0
 
 [output]
   [output.indecies]
   #specify the indecies order for different model output, false == not present
-  image_index = 0
-  labels_index = 1
-  result_index = 2
-  description_index = 3
+  image_index = 2 #index of the image
+  labels_index = 0 #index of the labels
+  result_index = 3 #index of the results
+  description_index = 1 #index of the description
 
   [output.booleans]
   image_bool = true
