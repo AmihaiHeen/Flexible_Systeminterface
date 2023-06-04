@@ -204,7 +204,7 @@ class freezeDetection(threading.Thread):
                     #print('sending works!!!') #print sending works
                     self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
                     proFrame = frame.copy()
-                    resList = singleprocess(proFrame,clientProcessed,count)
+                    resList = singleprocess(proFrame,clientProcessed,count,path)
                     self.socketio.emit('output',{'res':resList[:]})
 
                     #imgPro.join()
