@@ -198,7 +198,7 @@ function createResList(labels,results){
       var colorTxt = document.createTextNode( ' '+results[i]);
     }
     else{
-
+      if(labels[i] == 'conf' || labels[i] == 'confidence:'){
       if(results[i]>0.8){
         colorDiv.classList.add('foo','bg-success','border')
 
@@ -209,11 +209,24 @@ function createResList(labels,results){
       else{
         colorDiv.classList.add('foo','bg-danger')
       }
+      }
+      else {
+        if(results[i]>=8.00){
+          colorDiv.classList.add('foo','bg-success','border')
+
+        }
+        else if(results[i] < 8.00 && results[i] >= 5.00){
+          colorDiv.classList.add('foo','bg-warning','border')
+        }
+        else{
+          colorDiv.classList.add('foo','bg-danger')
+        }
+      }
       var colorTxt = document.createTextNode( ' '+results[i].toFixed(2));
     }
 
     var rLiTxt = document.createTextNode(labels[i]+' ');
-    console.log(typeof(results[i]))
+    console.log(labels[i])
     colorDiv.appendChild(colorTxt)
     rLi.appendChild(rLiTxt);
     rLi.appendChild(colorDiv);
@@ -260,7 +273,7 @@ function draw_frozen_image(msg){
   var capCan = document.getElementById('imgCanvas')
   var ctx = capCan.getContext('2d')
   var img = new Image();
-  img.src = msg.value;
+  img.src = "data:image/jpeg;base64,"+msg.value;
   setTimeout(function() {
   ctx.drawImage(img,0,0,capCan.width,capCan.height);
   }, 100);
@@ -418,7 +431,13 @@ function show_hide(b) {
 }
 
 function capImg(){
+  if(btnMode && backgroundMode){
   socket.emit('Capimg')
+  }
+  else{
+  socket.emit('capImage')
+
+  }
   clickCount++;
   console.log('click number: '+clickCount);
 }

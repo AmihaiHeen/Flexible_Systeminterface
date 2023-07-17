@@ -114,6 +114,7 @@ def still_frozen(prevdiff, currdiff): #takes differences as argument
 
 def singleprocess(frame,path,count,fullPath):
     img_index,lab_index,res_index,desc_index = cnv.getOutputIndecies()
+    fps, resolution,device_name,image_format = cnv.getImgCapCon()
 
     fnc = cnv.get_function()
 
@@ -122,18 +123,26 @@ def singleprocess(frame,path,count,fullPath):
     #print('this is the resultlist index 0: ',resList[img_index])
     #cv2.imwrite(path+os.sep+'frame-'+str(count)+'.jpg',resList[0])
     #resList[img_index] = cv2.resize(resList[img_index],(640,480))
-    fig, ax = plt.subplots()
-    ax.imshow(resList[img_index],cmap ='gray')
-    ax.axis('off')
-    ax.set_frame_on(False)
-    output_file = path+os.sep+'frame-'+str(count)+'.jpg'
-    fig.savefig(output_file,format='jpg',bbox_inches='tight',pad_inches = 0)
+    #fig, ax = plt.subplots()
+    plt.imshow(resList[img_index],cmap='gray')
+    #plt.margins(x=0)
+    #ax.imshow(resList[img_index])
+    plt.axis('off')
+    #plt.set_frame_on(False)
+    output_file = path+os.sep+'frame-'+str(count)+'.'+image_format
+    plt.savefig(output_file,format=image_format,bbox_inches='tight',pad_inches = 0)
+    #cv2.imwrite(output_file,cv2.cvtColor(resList[img_index],cv2.COLOR_BGR2RGB))
+    resList = list(resList)
+    retval, buffer = cv2.imencode('.jpg', resList[img_index])
+    #jpg_as_text = base64.b64encode(buffer).decode()
+    with open(path+os.sep+'frame-'+str(count)+'.txt','a') as w:
+        for i in resList:
+            w.writelines("%s\n" % i)
     with open(output_file,'rb') as r:
         jpg_as_text = base64.b64encode(r.read()).decode()
     #retval, buffer = cv2.imencode('.jpg', resList[0])
     #im_byte= buffer.tobytes()
     #jpg_as_text = base64.b64encode(im_byte).decode()
-    resList = list(resList)
     resList[img_index] = jpg_as_text
     return resList
 
@@ -187,6 +196,8 @@ class freezeDetection(threading.Thread):
     def run(self):
         #getting the necesary paths needed for the to save the images
         stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
+        fps, resolution,device_name,image_format = cnv.getImgCapCon()
+
         count = 1 #initialize counter to make image save path
         success, frame = self.cap.read() #reads first the frame captured
         prevdiff = 0; #initialize previous difference for still_frozen function
@@ -199,7 +210,7 @@ class freezeDetection(threading.Thread):
             #print(success,count,np.sum(np.abs(prev-frame))) # prints output
             if not (still_frozen(prevdiff, diff)): #checks if the image is still froxen
                 if (diff == 0): # checks if the different is 0 and the image is frozen
-                    path = capImgPath+os.sep+str(count)+'.jpg' #initialize the path for image to be saved
+                    path = capImgPath+os.sep+str(count)+'.'+image_format #initialize the path for image to be saved
                     cv2.imwrite(path, frame) #saves the frozen image to the specified path
                     #print('sending works!!!') #print sending works
                     self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
@@ -250,6 +261,8 @@ class BackgroundCapture(threading.Thread):
     def run(self):
         #getting the necesary paths needed for the to save the images
         stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
+        fps, resolution,device_name,image_format = cnv.getImgCapCon()
+
         count = 1 #initialize counter to make image save path
         sleeptime = 1/self.fps #initialize sleep timer
         while not self._stop_event.is_set(): #while loop running until _stop_event is set
@@ -258,7 +271,7 @@ class BackgroundCapture(threading.Thread):
                 #process_image(frame)
                 self.que.put(frame) #puts frame into que
                 print("produced frame") #prints that a frame was "produced in the command prompt"
-                path = bufferPath+os.sep+str(count)+'.jpg' #specifies the image path to save image
+                path = bufferPath+os.sep+str(count)+'.'+image_format #specifies the image path to save image
                 cv2.imwrite(path, frame) #saves the image at the specified path
                 #result = process_image(self.que.get())
                 #if result:
@@ -282,7 +295,7 @@ class BCAnalysis(threading.Thread):
         os_name = platform.system()
         #print('operation system: '+os_name)
         #command = [ffmpeg_path,'-i',input_stream,'-f','image2', f'{bufferPath}/frame-%d.jpg']
-        newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
+        newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -f image2 '+bufferPath+'/frame-%d.'+image_format
 
         #print(command)
         global process
@@ -327,10 +340,10 @@ class ffmpeg_freezeDetection(threading.Thread):
         global process
 
         if os_name == 'Windows':
-            newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
+            newCommand = 'ffmpeg -f dshow -i video="'+device_name+'" -r '+str(fps)+' -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -f image2 '+bufferPath+'/frame-%d.'+image_format
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         if os_name == 'Linux':
-            newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i '+device_name+' -video_size -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
+            newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i '+device_name+' -r '+str(fps)+' -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -f image2 '+bufferPath+'/frame-%d.'+image_format
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
 
         count = 1
@@ -379,9 +392,11 @@ class ffmpeg_freezeDetection(threading.Thread):
                     start_time = time.time()
                     path = capImgPath+os.sep+str(count)+'.'+image_format #initialize the path for image to be saved
                     cv2.imwrite(path, frame) #saves the frozen image to the specified path
+                    retval, buffer = cv2.imencode('.jpg', frame)
+                    jpg_as_text = base64.b64encode(buffer).decode()
                     #print('this is the captured frame',frame)
                     #print('sending works!!!') #print sending works
-                    self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
+                    self.socketio.emit('nextimg',{'value':jpg_as_text}) #WebSocket emits the frame to the interface
                     proFrame = frame.copy()
                     testPath = 'static/placeholder_images/test_jpg'+os.sep+test_list[count]
                     resList = singleprocess(proFrame,clientProcessed,count,path)

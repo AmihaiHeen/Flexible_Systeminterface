@@ -1,4 +1,4 @@
-
+import time
 import os
 import sys
 from os.path import exists
@@ -17,7 +17,7 @@ import convenientfunctions as cnv
 import image_save as save
 from flask import Flask, render_template,Response, request,redirect, send_from_directory, jsonify
 from flask_socketio import SocketIO
-
+from waitress import serve
 
 app = Flask(__name__)
 
@@ -112,13 +112,16 @@ def template_5():
         f = vc.freezeDetection(socketio,cap)
         f.start()
     global b
-    if buttonMode:
+    if buttonMode and backgroundMode:
         b = vc.BCAnalysis()
         b.start()
+    if buttonMode and not backgroundMode:
+        global capture
+        capture = cv2.VideoCapture(0)
 
     global clickCount
     clickCount = 0
-    return render_template('template_5.html',btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,img_index = img_index,desc_bool = desc_bool,desc_index = desc_index,res_bool = res_bool,lab_bool= lab_bool,lab_index = lab_index, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc,btn_plc = btn_plc)
+    return render_template('template_5.html',btnMode=buttonMode, fMode=freezeMode,backgroundMode = backgroundMode,img_bool = image_bool,img_index = img_index,desc_bool = desc_bool,desc_index = desc_index,res_bool = res_bool,lab_bool= lab_bool,lab_index = lab_index, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc,btn_plc = btn_plc)
 
 @app.route('/buffer_page', methods=['GET','POST'])
 def buffer_page():
@@ -136,15 +139,16 @@ def disconnect():
     #connect = False
     #vc.freeze_with_socket(socketio,connect)
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
-
     if(freezeMode):
         f.stop()
         f.join()
-    if(buttonMode):
+    global b
+    if(buttonMode and backgroundMode):
         b.stop()
     #    b.join()
-
-
+    global capture
+    if buttonMode and not backgroundMode:
+        capture.release()
 @socketio.on('stop')
 def stop():
     f.stop()
@@ -159,8 +163,11 @@ def btnCap():
     imgList = os.listdir(bufferPath)
     length = len(imgList)-1
     emit_path = f'{bufferPath}/frame-'+str(len(imgList)-1)+'.'+image_format
+    img = cv2.imread(emit_path)
+    retval, buffer = cv2.imencode('.jpg', img)
+    jpg_as_text = base64.b64encode(buffer).decode()
     print('click number',clickCount)
-    socketio.emit('nextimg',{'value':emit_path})
+    socketio.emit('nextimg',{'value':jpg_as_text})
     frame = cv2.imread(bufferPath+os.sep+imgList[length])
     count=1
     save_path = capImgPath+os.sep+str(count)+'.'+image_format
@@ -177,6 +184,25 @@ def clientImg(clientImage):
     stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
     pa =save.save_from_dataUrl(clientImage,capImgPath)
 
+@socketio.on('capImage')
+def capImg():
+    stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
+    fps, resolution, device_name, image_format = cnv.getImgCapCon()
+
+    #cap = cv2.VideoCapture(0)
+    ret,img = capture.read()
+    count=1
+    save_path = capImgPath+os.sep+str(count)+'.'+image_format
+    while os.path.exists(save_path):
+        count+=1
+        save_path = capImgPath+os.sep+str(count)+'.'+image_format
+    cv2.imwrite(save_path,img)
+    retval, buffer = cv2.imencode('.jpg', img)
+    jpg_as_text = base64.b64encode(buffer).decode()
+    socketio.emit('nextimg',{'value':jpg_as_text})
+    resList = vc.singleprocess(img,clientProcessed,count,save_path)
+    socketio.emit('output',{'res':resList[:]})
+
 
 @socketio.on('buffer_image')
 def recieve_image(buffer_image):
@@ -191,4 +217,4 @@ def video_feed():
 
 if __name__ == "__main__":
 
-    app.run(debug =True, host ='0.0.0.0' )
+    serve(app)
