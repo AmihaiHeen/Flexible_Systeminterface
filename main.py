@@ -17,7 +17,6 @@ import convenientfunctions as cnv
 import image_save as save
 from flask import Flask, render_template,Response, request,redirect, send_from_directory, jsonify
 from flask_socketio import SocketIO
-from waitress import serve
 
 app = Flask(__name__)
 
@@ -217,4 +216,4 @@ def video_feed():
 
 if __name__ == "__main__":
 
-    serve(app)
+    app.run(debug=False,host='0.0.0.0',port=5000)

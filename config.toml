@@ -1,7 +1,7 @@
 [model]
 #models are in the /static/Model folder
-module = 'static/Model/SonoNet_PyTorch-master/test'# path to the model python script without .py
-function= 'runIt' #name of the function analyzing a single image
+module = 'static/Model/Test_model'# path to the model python script without .py
+function= 'modelOut' #name of the function analyzing a single image
 
 [image_capture]
 #bool for activating the desired capturing method
