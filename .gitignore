@@ -13,3 +13,8 @@
 *static/placeholder_images/testimages*
 *multithreads.py*
 *flask_monitoringdashboard.db*
+*backlog.md*
+*config.txt*
+*.gitignore*
+!*static/Data/is_Empty.txt
+*keycloak_and_db_test.py*

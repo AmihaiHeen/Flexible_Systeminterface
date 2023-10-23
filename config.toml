@@ -5,15 +5,15 @@ function= 'modelOut' #name of the function analyzing a single image
 
 [image_capture]
 #bool for activating the desired capturing method
-image_capture_button = true
-image_capture_freeze = false
+image_capture_button = false
+image_capture_freeze = true
 image_capture_background = false
 #capturing setting, device_name varies depending on the operation system in use
 
 [capture_settings]
 #device_name= "Integrated Camera"
-device_name = "DVI2USB 3.0 D2S342420" #only necessary if using BackgroundCapture
-resolution = [340,240] #changes the resolution of captured images
+device_name = "USB Capture HDMI+" #only necessary if using BackgroundCapture
+resolution = [640,480] #changes the resolution of captured images
 image_format = 'jpg' #changes the format of the image captured
 background_capture_fps = 5 #only necessary if using BackgroundCapture
 

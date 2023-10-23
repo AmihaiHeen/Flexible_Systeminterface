@@ -117,7 +117,7 @@ def singleprocess(frame,path,count,fullPath):
     fps, resolution,device_name,image_format = cnv.getImgCapCon()
 
     fnc = cnv.get_function()
-
+    
     resList = fnc(fullPath)
 
     #print('this is the resultlist index 0: ',resList[img_index])
@@ -136,7 +136,7 @@ def singleprocess(frame,path,count,fullPath):
     retval, buffer = cv2.imencode('.jpg', resList[img_index])
     #jpg_as_text = base64.b64encode(buffer).decode()
     with open(path+os.sep+'frame-'+str(count)+'.txt','a') as w:
-        for i in resList:
+        for i in resList[1:]:
             w.writelines("%s\n" % i)
     with open(output_file,'rb') as r:
         jpg_as_text = base64.b64encode(r.read()).decode()
@@ -205,16 +205,22 @@ class freezeDetection(threading.Thread):
             prev = frame.copy() #sets previous frame captured
             success, frame = self.cap.read() #captures new frame
 
-            diff = np.sum(np.abs(prev[50:,:]-frame[50:,:])) #calculate difference between previous and current frame
+            diff = np.sum(np.abs(prev[50:-100,:-100]-frame[50:-100,:-100])) #calculate difference between previous and current frame
             #print(diff,prevdiff)
             #print(success,count,np.sum(np.abs(prev-frame))) # prints output
             if not (still_frozen(prevdiff, diff)): #checks if the image is still froxen
                 if (diff == 0): # checks if the different is 0 and the image is frozen
                     path = capImgPath+os.sep+str(count)+'.'+image_format #initialize the path for image to be saved
                     cv2.imwrite(path, frame) #saves the frozen image to the specified path
+                    retval, buffer = cv2.imencode('.jpg', frame)
+                    jpg_as_text = base64.b64encode(buffer).decode()
+                    #print('this is the captured frame',frame)
                     #print('sending works!!!') #print sending works
-                    self.socketio.emit('nextimg',{'value':path}) #WebSocket emits the frame to the interface
+                    self.socketio.emit('nextimg',{'value':jpg_as_text}) #WebSocket emits the frame to the interface
+                    #print('sending works!!!') #print sending works
+                    #self.socketio.emit('nextimg',{'value':path}) 
                     proFrame = frame.copy()
+                    print(proFrame.shape[:2])
                     resList = singleprocess(proFrame,clientProcessed,count,path)
                     self.socketio.emit('output',{'res':resList[:]})
 
@@ -301,14 +307,14 @@ class BCAnalysis(threading.Thread):
         global process
 
         if os_name == 'Windows':
-            newCommand = 'ffmpeg -f dshow -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i video="'+device_name+'" -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
+            newCommand = 'ffmpeg -f dshow -i video="'+device_name+'" -r '+str(fps)+' -vf scale='+str(resolution[0])+':'+str(resolution[1])+' -f image2 '+bufferPath+'/frame-%d.'+image_format
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
         if os_name == 'Linux':
             newCommand = 'ffmpeg -f v4l2 -video_size '+str(resolution[0])+'x'+str(resolution[1])+' -i '+device_name+' -video_size -r '+str(fps)+' -f image2 '+bufferPath+'/frame-%d.'+image_format
             process = subprocess.Popen(newCommand,stdin=subprocess.PIPE, shell=True,preexec_fn=os.setsid)
 
-        framecount = 1
-        time.sleep(2)
+        #framecount = 1
+        #time.sleep(2)
 
         #while True:
 
@@ -322,8 +328,34 @@ class BCAnalysis(threading.Thread):
         #    time.sleep(1/fps)
     def stop(self):
         global process
-        process.send_signal(signal.CTRL_BREAK_EVENT)
+        if platform.system() == 'Windows':
+            process.send_signal(signal.CTRL_BREAK_EVENT)
+        if platform.system() == 'Linux':
+            os.killpg(os.getpgid(process.pid),signal.SIGTERM)
         process.kill()
+class background_image_analysis(threading.Thread):
+    def __init__(self):
+        super().__init__()
+        self._stop_event = threading.Event()
+    def run(self):
+        stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
+        fps, resolution,device_name,image_format = cnv.getImgCapCon()
+        count = 1
+        buffer_image_path = bufferPath+os.sep+'frame-'+str(count)+'.'+image_format
+
+        while True:
+            print('hi')
+            
+            frame = cv2.imread(buffer_image_path)
+            copy_frame = frame.copy()
+            reslist = singleprocess(copy_frame,bufferProcessed,count,buffer_image_path)
+            count += 1    
+            buffer_image_path = bufferPath+os.sep+'frame-'+str(count)+'.'+image_format
+            time.sleep(1/fps)
+
+
+    def stop(self):
+        self._stop_event.set()            
 class ffmpeg_freezeDetection(threading.Thread):
     def __init__(self, socketio):
         super().__init__()
