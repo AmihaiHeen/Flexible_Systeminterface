@@ -28,26 +28,6 @@ def index():
     return render_template('index.html' )
 
 
-@app.route('/logout', methods=['GET','POST'])
-def logout():
-    refreshtoken = None
-    # Check if oidc_id_token exists before getting the refresh token
-    if g.get('oidc_id_token'):
-        refreshtoken = oidc.get_refresh_token()
-
-    # Log out from OIDC
-    oidc.logout()
-
-    # If we got a refresh token, log out from Keycloak
-    if refreshtoken:
-        keycloak_openid.logout(refreshtoken)
-
-    # Clear the oidc_id_token
-    g.oidc_id_token = None
-
-    return redirect(url_for('index'))
-
-
 @app.route('/template_1', methods=['GET','POST'])
 def template_1():
     path = ''
@@ -96,18 +76,18 @@ def template_4():
         f = vc.freezeDetection(socketio,cap)
         f.start()
 
-
-
     return render_template('template_4.html', btnMode=buttonMode, fMode=freezeMode,img_bool = image_bool,desc_bool = desc_bool,res_bool = res_bool, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc)
 
 @app.route('/template_5', methods=['GET', 'POST'])
 def template_5():
     save.make_dirs(myp) #creates necesarry libraries
+
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
     fps, resolution, device_name, image_format = cnv.getImgCapCon()
     image_bool,desc_bool,res_bool,lab_bool = cnv.getConfigReturns()
     cap_img,an_img,res_plc,desc_plc,plane_plc,btn_plc = cnv.getConfigInterface()
     img_index,lab_index,res_index,desc_index = cnv.getOutputIndecies()
+
     global f
     if freezeMode and backgroundMode:
         f = vc.ffmpeg_freezeDetection(socketio)
@@ -117,6 +97,7 @@ def template_5():
         cap = cv2.VideoCapture(1)
         f = vc.freezeDetection(socketio,cap)
         f.start()
+
     global b
     if buttonMode and backgroundMode:
 
@@ -130,6 +111,7 @@ def template_5():
     global clickCount
     clickCount = 0
     return render_template('template_5.html',btnMode=buttonMode, fMode=freezeMode,backgroundMode = backgroundMode,img_bool = image_bool,img_index = img_index,desc_bool = desc_bool,desc_index = desc_index,res_bool = res_bool,lab_bool= lab_bool,lab_index = lab_index, res_index = res_index,img_plc = cap_img,an_plc=an_img,res_plc=res_plc,desc_plc=desc_plc,plane_plc=plane_plc,btn_plc = btn_plc)
+
 
 @app.route('/buffer_page', methods=['GET','POST'])
 def buffer_page():
@@ -145,21 +127,27 @@ def buffer_page():
 @socketio.on('disconnect')
 def disconnect():                                                                                                                                               
     buttonMode,freezeMode,backgroundMode = cnv.getConfig()
+
     if(freezeMode):
         f.stop()
         f.join()
+
     global b
     if(buttonMode and backgroundMode):
         b.stop()
         d.stop()
-    #    b.join()
+
     global capture
     if buttonMode and not backgroundMode:
         capture.release()
+
+
+
 @socketio.on('stop')
 def stop():
     f.stop()
     f.join()
+
 
 @socketio.on('Capimg')
 def btnCap():
@@ -178,9 +166,11 @@ def btnCap():
     frame = cv2.imread(bufferPath+os.sep+imgList[length])
     count=1
     save_path = capImgPath+os.sep+str(count)+'.'+image_format
+
     while os.path.exists(save_path):
         count+=1
         save_path = capImgPath+os.sep+str(count)+'.'+image_format
+
     cv2.imwrite(save_path,frame)
     resList = vc.singleprocess(frame,clientProcessed,count,emit_path)
     socketio.emit('output',{'res':resList[:]})
@@ -190,6 +180,7 @@ def btnCap():
 def clientImg(clientImage):
     stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
     pa =save.save_from_dataUrl(clientImage,capImgPath)
+
 
 @socketio.on('capImage')
 def capImg():
@@ -203,9 +194,11 @@ def capImg():
     img = cv2.resize(img,resolution)
     count=1
     save_path = capImgPath+os.sep+str(count)+'.'+image_format
+
     while os.path.exists(save_path):
         count+=1
         save_path = capImgPath+os.sep+str(count)+'.'+image_format
+
     cv2.imwrite(save_path,img)
     retval, buffer = cv2.imencode('.jpg', img)
     jpg_as_text = base64.b64encode(buffer).decode()
@@ -218,6 +211,7 @@ def capImg():
 def recieve_image(buffer_image):
     stamp,dataPath,absfolder,bufferPath,bufferProcessed,capImgPath,clientProcessed = cnv.getMetadata()
     save.save_from_dataUrl(buffer_image,bufferPath)
+
 
 @app.route('/video_feed')
 def video_feed():
