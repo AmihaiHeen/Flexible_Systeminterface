@@ -1,6 +1,6 @@
 *venv/*
 *static/Data/*
-*metadata.txt*
+*/metadata.txt*
 *notes.md*
 *static/Model/COVID_19_detection_with_Chest_X_Ray_using_PyTorch_master*
 *static/Model/SonoNet_PyTorch-master*
